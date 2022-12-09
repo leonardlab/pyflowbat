@@ -1,0 +1,49 @@
+#Author: Cameron Davidson-Pilon, replicated styles from FiveThirtyEight.com
+# See https://www.dataorigami.net/blogs/fivethirtyeight-mpl
+
+font.family: Nunito, Lato, Arial
+
+lines.linewidth: 4
+lines.solid_capstyle: butt
+
+legend.fancybox: true
+
+#axes.prop_cycle: cycler('color', ['6915E0', 'F5B400', 'E70D1C', '097109', 'F14F04', 'AF0BA5'])
+#axes.prop_cycle: cycler('color', ['0267c1', 'efa00b', '00af54', 'e2cfea',  'd65108'])
+axes.prop_cycle: cycler('color', ['0267c1', 'efa00b', '00af54', 'e2cfea',  'd65108', '6915E0', '3DA5D9', 'FEC601', '097109', 'EA7317', 'AF0BA5'])
+axes.facecolor: white
+axes.labelsize: large
+axes.axisbelow: true
+axes.grid: true
+axes.edgecolor: b0b0b0
+axes.linewidth: 3.0
+axes.titlesize: x-large
+axes.spines.left:   False  # display axis spines
+axes.spines.bottom: False
+axes.spines.top:    False
+axes.spines.right:  False
+
+patch.edgecolor: white
+patch.linewidth: 0.5
+
+svg.fonttype: path
+
+grid.linestyle: :
+grid.linewidth: 1.0
+grid.color: b0b0b0
+
+xtick.major.size: 0
+xtick.minor.size: 0
+ytick.major.size: 0
+ytick.minor.size: 0
+
+font.size:14.0
+
+savefig.edgecolor: white
+savefig.facecolor: white
+
+figure.subplot.left: 0.08
+figure.subplot.right: 0.95
+figure.subplot.bottom: 0.07
+figure.facecolor: white
+
