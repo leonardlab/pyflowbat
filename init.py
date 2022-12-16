@@ -46,8 +46,20 @@ class Workspace:
         #TODO add R functionality
         self.r_ready = False
 
-    def init_r(self):
-        pass
+    def _verify_R_installation(self):
+        from subprocess import CalledProcessError
+        from subprocess import check_call
+        try:
+            check_call(['which', 'R'])
+        except CalledProcessError:
+            raise RuntimeError("No R installation could be found")
+        return True
+
+    def init_r(self, check_R_installation = True):
+        if check_R_installation:
+            self._verify_R_installation()
+        import r_gating
+        self.r_ready = True
 
     def __read_lims_file(self, lims_file) -> dict[str, list[int]]:
         lims_data = pd.read_csv(lims_file)
@@ -136,6 +148,7 @@ class Workspace:
         self.stats_collections[statistics_collection_name] = self.__extract_statistics(self.sample_collections[sample_collection_name], samples_quals, statistics_columns)
 
     def combine_replicates(self, statistics_collection_name, combined_statistics_collection_name, replicate_definition, columns):
+        #TODO: vectorize
         data = self.stats_collections[statistics_collection_name].copy()
         num_errs = 1
         for i in range(len(columns)):
@@ -176,6 +189,7 @@ class Workspace:
         self.stats_collections[combined_statistics_collection_name] = destination
 
     def apply_operation(self, statistics_collection, new_statistics_collection, rules, inputs):
+        #TODO vectorize
         data = self.stats_collections[statistics_collection]
         data_copy = data.copy()
         for i in range(len(data)):
@@ -546,6 +560,7 @@ class Workspace:
         return data_copy
 
     def apply_gate(self, sample_collection_to_gate, new_sample_collection, gating_function, inputs, gate_type = 1):
+        #TODO: add checks for R gates
         self.sample_collections[new_sample_collection] = self.__apply_gate(self.sample_collections[sample_collection_to_gate], gating_function, inputs, gate_type)
     
     def visualize_plot_change(self, sample_collection_0, data_0, sample_collection_f, data_f, channels: list[str]) -> None:
