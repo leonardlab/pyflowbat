@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import statsmodels.api as sm
+
 import gating
 import operations
 
@@ -22,7 +23,13 @@ class Collection:
     def get(self, key):
         return self.data[key]
 
-    def set(self, data):
+    def get_all(self):
+        return self.data
+
+    def set(self, key, elem):
+        self.data[key] = elem
+
+    def set_all(self, data):
         self.data = data
 
     def get_creation_info(self):
@@ -56,6 +63,9 @@ class Workspace:
         return True
 
     def init_r(self, check_R_installation = True):
+        if self.r_ready:
+            print("R functionality already initialized")
+            return
         if check_R_installation:
             self._verify_R_installation()
         import r_gating
@@ -113,6 +123,11 @@ class Workspace:
     def calculate_beads_factors(self, beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file = "./assets/std_beads_conversions.csv"):
         self.conversion_factors = self.__perform_beads_calculations(beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file)
 
+    def _create_sample_collection(self, dict):
+        samples_as_collection = Collection()
+        samples_as_collection.set_all(dict)
+        return samples_as_collection
+
     def __load_samples(self, file_folder, file_quals):
         extracted_data = {}
         file_names = os.listdir(file_folder)
@@ -126,7 +141,7 @@ class Workspace:
         return extracted_data
     
     def load_samples(self, sample_collection_name, samples_folder, samples_quals):
-        self.sample_collections[sample_collection_name] = self.__load_samples(samples_folder, samples_quals)
+        self.sample_collections[sample_collection_name] = self._create_sample_collection(self.__load_samples(samples_folder, samples_quals))
 
     def __extract_statistics(self, data, reqs, columns):
         columns_list = [""] * len(columns)
@@ -145,7 +160,7 @@ class Workspace:
         return destination
 
     def extract_statistics(self, sample_collection_name, statistics_collection_name, samples_quals, statistics_columns):
-        self.stats_collections[statistics_collection_name] = self.__extract_statistics(self.sample_collections[sample_collection_name], samples_quals, statistics_columns)
+        self.stats_collections[statistics_collection_name] = self._create_sample_collection(self.__extract_statistics(self.sample_collections[sample_collection_name], samples_quals, statistics_columns))
 
     def combine_replicates(self, statistics_collection_name, combined_statistics_collection_name, replicate_definition, columns):
         #TODO: vectorize
@@ -186,7 +201,7 @@ class Workspace:
             destination.loc[k] = new_data
             i = j
             k = k + 1
-        self.stats_collections[combined_statistics_collection_name] = destination
+        self.stats_collections[combined_statistics_collection_name] = self._create_sample_collection(destination)
 
     def apply_operation(self, statistics_collection, new_statistics_collection, rules, inputs):
         #TODO vectorize
@@ -195,7 +210,7 @@ class Workspace:
         for i in range(len(data)):
             for j in range(len(rules)):
                 data_copy.loc[i, rules[j][0]] = rules[j][1](data_copy.iloc[i], inputs)
-        self.stats_collections[new_statistics_collection] = data_copy
+        self.stats_collections[new_statistics_collection] = self._create_sample_collection(data_copy)
 
     def __calculate_compensation_matrix_n_channels(self, list_comp_samples, channels, threshold=10**-4, k=0.1):
         num_ch = len(channels)
@@ -472,11 +487,11 @@ class Workspace:
         for sample in compensation_samples:
             samples_to_compensate.append(self.sample_collections[sample_collection][sample])
         if len(compensation_channels) == 2:
-            self.compensation_matrix = self.__calculate_compensation_matrix_2_channels(samples_to_compensate[0], samples_to_compensate[1], compensation_channels[0], compensation_channels[1], threshold, k)
+            self.compensation_matrix = self._create_sample_collection(self.__calculate_compensation_matrix_2_channels(samples_to_compensate[0], samples_to_compensate[1], compensation_channels[0], compensation_channels[1], threshold, k))
         elif len(compensation_channels) == 3:
-            self.compensation_matrix = self.__calculate_compensation_matrix_3_channels(samples_to_compensate[0], samples_to_compensate[1], samples_to_compensate[2], compensation_channels[0], compensation_channels[1], compensation_channels[2], threshold, k)
+            self.compensation_matrix = self._create_sample_collection(self.__calculate_compensation_matrix_3_channels(samples_to_compensate[0], samples_to_compensate[1], samples_to_compensate[2], compensation_channels[0], compensation_channels[1], compensation_channels[2], threshold, k))
         else:
-            self.compensation_matrix = self.__calculate_compensation_matrix_n_channels(samples_to_compensate, compensation_channels, threshold, k)
+            self.compensation_matrix = self._create_sample_collection(self.__calculate_compensation_matrix_n_channels(samples_to_compensate, compensation_channels, threshold, k))
 
     def __apply_compensation_matrix_2_channels(self, data_to_compensate, ch_1, ch_2, A):
         data_copy = data_to_compensate.copy()
@@ -561,7 +576,7 @@ class Workspace:
 
     def apply_gate(self, sample_collection_to_gate, new_sample_collection, gating_function, inputs, gate_type = 1):
         #TODO: add checks for R gates
-        self.sample_collections[new_sample_collection] = self.__apply_gate(self.sample_collections[sample_collection_to_gate], gating_function, inputs, gate_type)
+        self.sample_collections[new_sample_collection] = self._create_sample_collection(self.__apply_gate(self.sample_collections[sample_collection_to_gate], gating_function, inputs, gate_type))
     
     def visualize_plot_change(self, sample_collection_0, data_0, sample_collection_f, data_f, channels: list[str]) -> None:
         self.visualize_plot_overlay([[sample_collection_0, data_0], [sample_collection_f, data_f]], ["#FF0000", "#1E90FF"], channels, [0.04, 0.06], ['.', 'o'])
