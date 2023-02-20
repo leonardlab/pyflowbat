@@ -1,2 +1,4 @@
 /test-file-no-upload
 .DS_Store
+/tests
+test*.ipynb

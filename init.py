@@ -124,7 +124,7 @@ class Workspace:
         self.conversion_factors = self.__perform_beads_calculations(beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file)
 
     def _create_sample_collection(self, dict):
-        samples_as_collection = Collection()
+        samples_as_collection = Collection(None, None, None)
         samples_as_collection.set_all(dict)
         return samples_as_collection
 
