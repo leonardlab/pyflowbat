@@ -506,6 +506,7 @@ class Workspace:
             self.sample_collections[new_sample_collection] = self.__apply_compensation_matrix_n_channels(self.sample_collections[sample_collection], compensation_channels, self.compensation_matrix)
 
     def graph_statistics(self, data, errors=[False, False], legend=None, title=None, labels=[None, None], xlog=False, ylog=False, save=True):
+        # TODO: change save to Union[bool, str] so save can be path to file to save
         graphable_data = []
         for count, val in enumerate(data):
             graphable_data.append([self.stats_collections[val[0]], val[1], val[2]])
