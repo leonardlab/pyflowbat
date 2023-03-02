@@ -6,7 +6,7 @@ rpy2.robjects.numpy2ri.activate()
 r = ro.r
 r['source']('gating.r')
 
-def singlet_gate(data, gating_channels):
+def singlet_gate(data, gating_channels, **kwargs):
 
     fcs_data = data.copy()
     fcs_data_nparr = np.asarray(data)
@@ -22,7 +22,7 @@ def singlet_gate(data, gating_channels):
     fcs_data[:, :] = r_result
     return fcs_data
 
-def clust_2d_gate(data, gating_channels, target, quantile=0.95, K=2):
+def clust_2d_gate(data, gating_channels, target, quantile=0.95, K=2, **kwargs):
 
     fcs_data = data.copy()
     fcs_data_nparr = np.asarray(data)
@@ -38,7 +38,7 @@ def clust_2d_gate(data, gating_channels, target, quantile=0.95, K=2):
     fcs_data[:, :] = r_result
     return fcs_data
 
-def transitional_gate(data, gating_channels, target, quantile = 0.95, K = 2, translation = 0.15):
+def transitional_gate(data, gating_channels, target, quantile = 0.95, K = 2, translation = 0.15, **kwargs):
 
     fcs_data = data.copy()
     fcs_data_nparr = np.asarray(data)
