@@ -6,7 +6,9 @@ An open-source software package for performing high-throughput batch analysis of
 
 <!-- TODO MAKE THIS AN ACTUAL README -->
 
-## Custom R Fucntions
+## Advanced usage
+
+### Custom R functions
 
 Custom R functions (i.e., R functions not included in the `pyflowbat.r_gating` module) can be called from a PyFlowBAT workspace after `pyflobat.Workspace.init_r()` has been called if the proper dependencies are installed.
 
