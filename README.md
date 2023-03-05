@@ -44,7 +44,7 @@ To call the custom R function from Python, there are two methods:
 1. use the `pyflowbat.r_gating_general.r_gate()` function or
 2. write your own Python function for calling a R functions using the `rpy2` library.
 
-If you choose to write a new Python function, it should take the form of the following with `KEY_WORD_ARGUMENTS` being at the necessary key word arguments to call your function.
+If you choose to write a new Python function, it should take the form of the following with `KEY_WORD_ARGUMENTS` being the necessary key word arguments to call your function.
 Recall that like all gating functions called by PyFlowBAT, including `**kwargs` is required to ensure that PyFlowBAT can pass potentially unused keyword arguments to the function without error.
 
 ```python
