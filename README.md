@@ -1,6 +1,6 @@
 # PyFlowBAT
 
-<img src="./pyflowbat-logo.png" width=40% height=40%>
+<img src="./resources/pyflowbat-logo.png" width=40% height=40%>
 
 An open-source software package for performing high-throughput batch analysis of flow cytometry data.
 
