@@ -72,3 +72,5 @@ def FUNCTION_NAME_HERE(data, gating_channels, KEY_WORD_ARGUMENTS, **kwargs):
     fcs_data[:, :] = r_result
     return fcs_data
 ```
+
+For detailed examples of how to write the Python and R functions, look at the functions defined in `pyflowbat.gating.r` and `pyflowbat.r_gating.py`.
