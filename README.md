@@ -37,7 +37,7 @@ FUNCTION_NAME <- function(data, nr, nc,
 }
 ```
 
-Note that `ARGUMENTS` can be either a single object (as must be the case if the built-in `pyflowbat.r_gating_general.r_gate()` function is used to call it) or a multiple parameters.
+Note that `ARGUMENTS` can be either a single object (as must be the case if the built-in `pyflowbat.r_gating_general.r_gate()` function is used to call it) or multiple parameters.
 
 To call the custom R function from Python, there are two methods:
 
