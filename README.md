@@ -2,13 +2,20 @@
 
 <img src="./resources/pyflowbat-logo.png" width=40% height=40%>
 
-An open-source software package for performing high-throughput batch analysis of flow cytometry data.
+PyFlowBAT is an open-source Python package for performing high-throughput batch analysis of flow cytometry data.
 
-<!-- TODO MAKE THIS AN ACTUAL README -->
+PyFlowBAT can be used to
+
+---
+## 
+
+<!-- [ ] MAKE THIS AN ACTUAL README -->
 
 ## Advanced usage
 
 ### Custom R functions
+
+<!-- [ ] make sure below instructions are actually CORRECT -->
 
 Custom R functions (i.e., R functions not included in the `pyflowbat.r_gating` module) can be called from a PyFlowBAT workspace after `pyflobat.Workspace.init_r()` has been called if the proper dependencies are installed.
 

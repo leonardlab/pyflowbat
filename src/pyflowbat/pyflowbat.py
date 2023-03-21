@@ -1,4 +1,4 @@
-# TODO inputs for functions into **kwargs
+# [ ] inputs for functions into **kwargs
 from calendar import c
 import os
 from typing import Any
@@ -26,7 +26,7 @@ class Workspace:
         mpl.rcParams["figure.dpi"] = 150
         if stylesheet is not None:
             mpl.style.use(stylesheet)
-        #TODO add R functionality
+        #[ ] add R functionality
         self.r_ready = False
 
     def _verify_R_installation(self):
@@ -134,7 +134,7 @@ class Workspace:
         self.stats_collections[statistics_collection_name] = self.__extract_statistics(self.sample_collections[sample_collection_name], samples_quals, statistics_columns)
 
     def combine_replicates(self, statistics_collection_name, combined_statistics_collection_name, replicate_definition, columns):
-        #TODO: vectorize
+        #[ ]: vectorize
         data = self.stats_collections[statistics_collection_name].copy()
         num_errs = 1
         for i in range(len(columns)):
@@ -175,7 +175,7 @@ class Workspace:
         self.stats_collections[combined_statistics_collection_name] = destination
 
     def apply_operation(self, statistics_collection, new_statistics_collection, rules, inputs):
-        #TODO vectorize
+        #[ ] vectorize
         data = self.stats_collections[statistics_collection]
         data_copy = data.copy()
         for i in range(len(data)):
@@ -506,7 +506,7 @@ class Workspace:
             self.sample_collections[new_sample_collection] = self.__apply_compensation_matrix_n_channels(self.sample_collections[sample_collection], compensation_channels, self.compensation_matrix)
 
     def graph_statistics(self, data, errors=[False, False], legend=None, title=None, labels=[None, None], xlog=False, ylog=False, save=True):
-        # TODO: change save to Union[bool, str] so save can be path to file to save
+        # [ ]: change save to Union[bool, str] so save can be path to file to save
         graphable_data = []
         for count, val in enumerate(data):
             graphable_data.append([self.stats_collections[val[0]], val[1], val[2]])
@@ -539,7 +539,7 @@ class Workspace:
         data_copy = data_to_gate.copy()
         if 'limits' not in inputs:
             inputs['limits'] = self.lims
-        # TODO all gates to work the same way
+        # [ ] all gates to work the same way
         if gate_type != 1:
             return gating_function(data_copy.copy(), **inputs)
         for key in data_copy.keys():
