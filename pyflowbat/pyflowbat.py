@@ -9,14 +9,16 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import statsmodels.api as sm
 
-import gating
-import operations
+from pyflowbat import _std_vals
 
 class Workspace:
     
-    def __init__(self, stylesheet = "./assets/std_stylesheet.mplstyle", lims_file = "./assets/std_lims.csv", full_output = False) -> None:
+    def __init__(self, stylesheet = _std_vals.std_pfb_style, lims_file = "_std", full_output = False) -> None:
         self.full_output = full_output
-        self.lims = self.__read_lims_file(lims_file)
+        if lims_file == "_std":
+            self.lims = _std_vals.std_lims
+        else:
+            self.lims = self._read_lims_file(lims_file)
         self.conversion_factors = None
         self.flow_data = None
         self.flow_statistics = None
@@ -47,22 +49,25 @@ class Workspace:
         import r_gating
         self.r_ready = True
 
-    def __read_lims_file(self, lims_file) -> dict[str, list[int]]:
+    def _read_lims_file(self, lims_file) -> dict[str, list[int]]:
         lims_data = pd.read_csv(lims_file)
         lims_dict = {}
         for header in list(lims_data.columns):
             lims_dict[header] = list(lims_data[header])
         return lims_dict
 
-    def __read_bead_conversion_file(self, conversions_file) -> dict[str, np.ndarray]:
+    def _read_bead_conversion_file(self, conversions_file) -> dict[str, np.ndarray]:
         beads_data = pd.read_csv(conversions_file)
         beads_dict = {}
         for header in list(beads_data.columns):
             beads_dict[header] = np.asarray(beads_data[header])
         return beads_dict
 
-    def __perform_beads_calculations(self, beads_file, beads_fluorescent_channels, beads_num_pops, conversions_file) -> dict[str, list[float, float]]:
-        conversions_data = self.__read_bead_conversion_file(conversions_file)
+    def _perform_beads_calculations(self, beads_file, beads_fluorescent_channels, beads_num_pops, conversions_file) -> dict[str, list[float, float]]:
+        if conversions_file == "_std":
+            conversions_data = _std_vals.std_beads_conversions
+        else:
+            conversions_data = self._read_bead_conversion_file(conversions_file)
         beads_data = fc.io.FCSData(beads_file)
         pops = fc.mef.clustering_gmm(
             beads_data[:, [beads_fluorescent_channels[0][0]]],
@@ -96,10 +101,10 @@ class Workspace:
             tmp_conv["" + ch[0] +"_stderr"] = models[count].bse[0]
         return tmp_conv.copy()
 
-    def calculate_beads_factors(self, beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file = "./assets/std_beads_conversions.csv"):
-        self.conversion_factors = self.__perform_beads_calculations(beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file)
+    def calculate_beads_factors(self, beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file = "_std"):
+        self.conversion_factors = self._perform_beads_calculations(beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file)
 
-    def __load_samples(self, file_folder, file_quals):
+    def _load_samples(self, file_folder, file_quals):
         extracted_data = {}
         file_names = os.listdir(file_folder)
         file_names.sort()
@@ -112,9 +117,9 @@ class Workspace:
         return extracted_data
     
     def load_samples(self, sample_collection_name, samples_folder, samples_quals):
-        self.sample_collections[sample_collection_name] = self.__load_samples(samples_folder, samples_quals)
+        self.sample_collections[sample_collection_name] = self._load_samples(samples_folder, samples_quals)
 
-    def __extract_statistics(self, data, reqs, columns):
+    def _extract_statistics(self, data, reqs, columns):
         columns_list = [""] * len(columns)
         for i in range(len(columns)):
             columns_list[i] = columns[i][0]
@@ -131,7 +136,7 @@ class Workspace:
         return destination
 
     def extract_statistics(self, sample_collection_name, statistics_collection_name, samples_quals, statistics_columns):
-        self.stats_collections[statistics_collection_name] = self.__extract_statistics(self.sample_collections[sample_collection_name], samples_quals, statistics_columns)
+        self.stats_collections[statistics_collection_name] = self._extract_statistics(self.sample_collections[sample_collection_name], samples_quals, statistics_columns)
 
     def combine_replicates(self, statistics_collection_name, combined_statistics_collection_name, replicate_definition, columns):
         #[ ]: vectorize
@@ -183,7 +188,7 @@ class Workspace:
                 data_copy.loc[i, rules[j][0]] = rules[j][1](data_copy.iloc[i], inputs)
         self.stats_collections[new_statistics_collection] = data_copy
 
-    def __calculate_compensation_matrix_n_channels(self, list_comp_samples, channels, threshold=10**-4, k=0.1):
+    def _calculate_compensation_matrix_n_channels(self, list_comp_samples, channels, threshold=10**-4, k=0.1):
         num_ch = len(channels)
         comp_samples = np.copy(np.asarray(list_comp_samples))
         error_comp_samples = np.copy(comp_samples)
@@ -209,7 +214,7 @@ class Workspace:
 
         return coeffs
 
-    def __calculate_compensation_matrix_3_channels(self, fcs_ch_1, fcs_ch_2, fcs_ch_3, ch_1, ch_2, ch_3, threshold=10**-4, k=0.1):
+    def _calculate_compensation_matrix_3_channels(self, fcs_ch_1, fcs_ch_2, fcs_ch_3, ch_1, ch_2, ch_3, threshold=10**-4, k=0.1):
         c_12 = c_13 = c_21 = c_23 = c_31 = c_32 = 0.0
         A = np.array([[1.0, c_12, c_13], [c_21, 1.0, c_23], [c_31, c_32, 1.0]])
 
@@ -383,7 +388,7 @@ class Workspace:
             print(A)
         return A
 
-    def __calculate_compensation_matrix_2_channels(self, fcs_ch_1, fcs_ch_2, ch_1, ch_2, threshold=10**-4, k=0.1):
+    def _calculate_compensation_matrix_2_channels(self, fcs_ch_1, fcs_ch_2, ch_1, ch_2, threshold=10**-4, k=0.1):
         c_12 = c_21 = 0.0
         A = np.array([[1.0, c_12], [c_21, 1.0]])
 
@@ -458,13 +463,13 @@ class Workspace:
         for sample in compensation_samples:
             samples_to_compensate.append(self.sample_collections[sample_collection][sample])
         if len(compensation_channels) == 2:
-            self.compensation_matrix = self.__calculate_compensation_matrix_2_channels(samples_to_compensate[0], samples_to_compensate[1], compensation_channels[0], compensation_channels[1], threshold, k)
+            self.compensation_matrix = self._calculate_compensation_matrix_2_channels(samples_to_compensate[0], samples_to_compensate[1], compensation_channels[0], compensation_channels[1], threshold, k)
         elif len(compensation_channels) == 3:
-        #     self.compensation_matrix = self.__calculate_compensation_matrix_n_channels(samples_to_compensate[0], samples_to_compensate[1], samples_to_compensate[2], compensation_channels[0], compensation_channels[1], compensation_channels[2], threshold, k)
+        #     self.compensation_matrix = self._calculate_compensation_matrix_n_channels(samples_to_compensate[0], samples_to_compensate[1], samples_to_compensate[2], compensation_channels[0], compensation_channels[1], compensation_channels[2], threshold, k)
         # else:
-            self.compensation_matrix = self.__calculate_compensation_matrix_n_channels(samples_to_compensate, compensation_channels, threshold, k)
+            self.compensation_matrix = self._calculate_compensation_matrix_n_channels(samples_to_compensate, compensation_channels, threshold, k)
 
-    def __apply_compensation_matrix_2_channels(self, data_to_compensate, ch_1, ch_2, A):
+    def _apply_compensation_matrix_2_channels(self, data_to_compensate, ch_1, ch_2, A):
         data_copy = data_to_compensate.copy()
         for key in data_to_compensate.keys():
             curr_data = data_to_compensate[key]
@@ -480,7 +485,7 @@ class Workspace:
 
         return data_copy
 
-    def __apply_compensation_matrix_3_channels(self, data_to_compensate, ch_1, ch_2, ch_3, A):
+    def _apply_compensation_matrix_3_channels(self, data_to_compensate, ch_1, ch_2, ch_3, A):
         data_copy = data_to_compensate.copy()
         for key in data_to_compensate.keys():
             curr_data = data_to_compensate[key]
@@ -490,7 +495,7 @@ class Workspace:
             data_copy[key] = curr_data
         return data_copy
 
-    def __apply_compensation_matrix_n_channels(self, data_to_compensate, channels, A):
+    def _apply_compensation_matrix_n_channels(self, data_to_compensate, channels, A):
         data_copy = data_to_compensate.copy()
         for key in data_to_compensate.keys():
             for i in range(len(channels)):
@@ -499,11 +504,11 @@ class Workspace:
 
     def apply_compensation_matrix(self, sample_collection, new_sample_collection, compensation_channels):
         if len(compensation_channels) == 2:
-            self.sample_collections[new_sample_collection] = self.__apply_compensation_matrix_2_channels(self.sample_collections[sample_collection], compensation_channels[0], compensation_channels[1], self.compensation_matrix)
+            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_2_channels(self.sample_collections[sample_collection], compensation_channels[0], compensation_channels[1], self.compensation_matrix)
         elif len(compensation_channels) == 3:
-            self.sample_collections[new_sample_collection] = self.__apply_compensation_matrix_3_channels(self.sample_collections[sample_collection], compensation_channels[0], compensation_channels[1], compensation_channels[2], self.compensation_matrix)
+            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_3_channels(self.sample_collections[sample_collection], compensation_channels[0], compensation_channels[1], compensation_channels[2], self.compensation_matrix)
         else:
-            self.sample_collections[new_sample_collection] = self.__apply_compensation_matrix_n_channels(self.sample_collections[sample_collection], compensation_channels, self.compensation_matrix)
+            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_n_channels(self.sample_collections[sample_collection], compensation_channels, self.compensation_matrix)
 
     def graph_statistics(self, data, errors=[False, False], legend=None, title=None, labels=[None, None], xlog=False, ylog=False, save=True):
         # [ ]: change save to Union[bool, str] so save can be path to file to save
@@ -535,7 +540,7 @@ class Workspace:
             plt.savefig(""+('_').join(('').join(title.split('.')).split(' '))+".png", dpi=500, bbox_inches ="tight")
         plt.show()
    
-    def __apply_gate(self, data_to_gate, gating_function, inputs, gate_type):
+    def _apply_gate(self, data_to_gate, gating_function, inputs, gate_type):
         data_copy = data_to_gate.copy()
         if 'limits' not in inputs:
             inputs['limits'] = self.lims
@@ -547,7 +552,7 @@ class Workspace:
         return data_copy
 
     def apply_gate(self, sample_collection_to_gate, new_sample_collection, gating_function, inputs = {}, gate_type = 1):
-        self.sample_collections[new_sample_collection] = self.__apply_gate(self.sample_collections[sample_collection_to_gate], gating_function, inputs, gate_type)
+        self.sample_collections[new_sample_collection] = self._apply_gate(self.sample_collections[sample_collection_to_gate], gating_function, inputs, gate_type)
     
     def visualize_plot_change(self, sample_collection_0, data_0, sample_collection_f, data_f, channels: list[str]) -> None:
         self.visualize_plot_overlay([[sample_collection_0, data_0], [sample_collection_f, data_f]], ["#FF0000", "#1E90FF"], channels, [0.04, 0.06], ['.', 'o'])

@@ -3,9 +3,4 @@
 /.ipynb_checkpoints
 .DS_Store
 
-/test-file-no-upload
-/tests
-test*.ipynb
-
-old_init.py
-
+*.tst.*
