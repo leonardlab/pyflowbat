@@ -1,7 +1,5 @@
 # [ ] inputs for functions into **kwargs
-from calendar import c
 import os
-from typing import Any
 import FlowCal as fc
 import pandas as pd
 import numpy as np
@@ -46,7 +44,6 @@ class Workspace:
             return
         if check_R_installation:
             self._verify_R_installation()
-        import r_gating
         self.r_ready = True
 
     def _read_lims_file(self, lims_file) -> dict[str, list[int]]:
@@ -95,11 +92,11 @@ class Workspace:
                     [0, np.max(beads_means[count]) * models[count].params[0]],
                 )
                 plt.show()
-        tmp_conv = {}
+        conv_fctrs = {}
         for count, ch in enumerate(beads_fluorescent_channels):
-            tmp_conv[ch[0]] = models[count].params[0]
-            tmp_conv["" + ch[0] +"_stderr"] = models[count].bse[0]
-        return tmp_conv.copy()
+            conv_fctrs[ch[0]] = models[count].params[0]
+            conv_fctrs["" + ch[0] +"_stderr"] = models[count].bse[0]
+        return conv_fctrs
 
     def calculate_beads_factors(self, beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file = "_std"):
         self.conversion_factors = self._perform_beads_calculations(beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file)
@@ -467,7 +464,7 @@ class Workspace:
         elif len(compensation_channels) == 3:
         #     self.compensation_matrix = self._calculate_compensation_matrix_n_channels(samples_to_compensate[0], samples_to_compensate[1], samples_to_compensate[2], compensation_channels[0], compensation_channels[1], compensation_channels[2], threshold, k)
         # else:
-            self.compensation_matrix = self._calculate_compensation_matrix_n_channels(samples_to_compensate, compensation_channels, threshold, k)
+            self.compensation_matrix = (compensation_channels, self._calculate_compensation_matrix_n_channels(samples_to_compensate, compensation_channels, threshold, k))
 
     def _apply_compensation_matrix_2_channels(self, data_to_compensate, ch_1, ch_2, A):
         data_copy = data_to_compensate.copy()
@@ -496,21 +493,25 @@ class Workspace:
         return data_copy
 
     def _apply_compensation_matrix_n_channels(self, data_to_compensate, channels, A):
+        # [ ] converts channels to tuple
+        # [ ] use advanced slicing data[:, (chnls)] = A * data[:, (chnls)]
         data_copy = data_to_compensate.copy()
         for key in data_to_compensate.keys():
             for i in range(len(channels)):
                 data_copy[key][i][:, channels] = (np.dot(A, data_copy[:, channels].T)).T
         return data_copy
 
-    def apply_compensation_matrix(self, sample_collection, new_sample_collection, compensation_channels):
+    def apply_compensation_matrix(self, sample_collection, new_sample_collection):
+        compensation_channels = self.compensation_matrix[0]
+        compensation_matrix = self.compensation_matrix[1]
         if len(compensation_channels) == 2:
-            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_2_channels(self.sample_collections[sample_collection], compensation_channels[0], compensation_channels[1], self.compensation_matrix)
+            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_2_channels(self.sample_collections[sample_collection], compensation_channels[0], compensation_channels[1], compensation_matrix)
         elif len(compensation_channels) == 3:
-            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_3_channels(self.sample_collections[sample_collection], compensation_channels[0], compensation_channels[1], compensation_channels[2], self.compensation_matrix)
+            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_3_channels(self.sample_collections[sample_collection], compensation_channels[0], compensation_channels[1], compensation_channels[2], compensation_matrix)
         else:
-            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_n_channels(self.sample_collections[sample_collection], compensation_channels, self.compensation_matrix)
+            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_n_channels(self.sample_collections[sample_collection], compensation_channels, compensation_matrix)
 
-    def graph_statistics(self, data, errors=[False, False], legend=None, title=None, labels=[None, None], xlog=False, ylog=False, save=True):
+    def graph_statistics(self, data, errors=(False, False), legend=None, title=None, labels=(None, None), xlog=False, ylog=False, save=True):
         # [ ]: change save to Union[bool, str] so save can be path to file to save
         graphable_data = []
         for count, val in enumerate(data):
@@ -546,9 +547,9 @@ class Workspace:
             inputs['limits'] = self.lims
         # [ ] all gates to work the same way
         if gate_type != 1:
-            return gating_function(data_copy.copy(), **inputs)
+            return gating_function(data_copy.copy(), r_ready = self.r_ready, **inputs)
         for key in data_copy.keys():
-            data_copy[key] = gating_function(data_copy[key], **inputs)
+            data_copy[key] = gating_function(data_copy[key], r_ready = self.r_ready, **inputs)
         return data_copy
 
     def apply_gate(self, sample_collection_to_gate, new_sample_collection, gating_function, inputs = {}, gate_type = 1):
@@ -557,7 +558,7 @@ class Workspace:
     def visualize_plot_change(self, sample_collection_0, data_0, sample_collection_f, data_f, channels: list[str]) -> None:
         self.visualize_plot_overlay([[sample_collection_0, data_0], [sample_collection_f, data_f]], ["#FF0000", "#1E90FF"], channels, [0.04, 0.06], ['.', 'o'])
 
-    def visualize_plot_overlay(self, plots: list[list[Any]], colors: list[str], channels: list[str], sizes: list[int] = None, markers: list[str] = None) -> None:
+    def visualize_plot_overlay(self, plots: list[list], colors: list[str], channels: list[str], sizes: list[int] = None, markers: list[str] = None) -> None:
         if sizes is None:
             sizes = [0.01] * len(plots)
         if markers is None:

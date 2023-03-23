@@ -5,7 +5,11 @@ rpy2.robjects.numpy2ri.activate()
 
 r = ro.r
 
-def general_r_gate(data, gating_channels, r_file, r_function, arguments, **kwargs):
+def general_r_gate(data, gating_channels, r_file, r_function, arguments, r_ready = False, **kwargs):
+
+    if not r_ready:
+        raise RuntimeError("R functionality has not been initialized")
+    
     r['source'](r_file)
 
     fcs_data = data.copy()
