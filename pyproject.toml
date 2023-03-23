@@ -15,6 +15,7 @@ scipy = "1.7.3"
 rpy2 = "3.5.6"
 pandas = "~1.5.3"
 
+
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
 pylint = "^2.12.2"
@@ -26,7 +27,6 @@ mypy = "^0.941"
 sphinx-rtd-theme = "^1.0.0"
 sphinx_mdinclude = "^0.5.1"
 
-
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
