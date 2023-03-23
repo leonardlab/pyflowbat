@@ -1,8 +1,6 @@
 import numpy as np
 import statsmodels.api as sm
 from scipy.signal import find_peaks, peak_prominences
-import FlowCal as fc
-import matplotlib.pyplot as plt
 
 # [ ]: change gate names to nouns
 

@@ -519,7 +519,7 @@ class Workspace:
     def graph_statistics(self, data, errors=(False, False), legend=None, title=None, labels=(None, None), xlog=False, ylog=False, save=True):
         # [ ]: change save to Union[bool, str] so save can be path to file to save
         graphable_data = []
-        for count, val in enumerate(data):
+        for _, val in enumerate(data):
             graphable_data.append([self.stats_collections[val[0]], val[1], val[2]])
         graphable_data
         plt.close()
