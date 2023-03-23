@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import statsmodels.api as sm
 
+from pyflowbat import gating
+from pyflowbat import operations
+
 from pyflowbat import _std_vals
 
 class Workspace:
@@ -44,6 +47,8 @@ class Workspace:
             return
         if check_R_installation:
             self._verify_R_installation()
+        from pyflowbat import r_gating
+        from pyflowbat import r_gating_general
         self.r_ready = True
 
     def _read_lims_file(self, lims_file) -> dict[str, list[int]]:
