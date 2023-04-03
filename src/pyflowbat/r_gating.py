@@ -54,7 +54,7 @@ transitional_gate <- function(data, nr, nc, channel_names,
 
 ''')
 
-def singlet_gate(data, gating_channels, r_ready, **kwargs):
+def singlet_gate(data, gating_channels, r_ready = False, **kwargs):
 
     if not r_ready:
         raise RuntimeError("R functionality has not been initialized")
@@ -113,10 +113,10 @@ def transitional_gate(data, gating_channels, target, quantile = 0.95, K = 2, tra
     
 def __test__():
     import FlowCal as fc
-    ungated_data = fc.io.FCSData("./test-file-no-upload/PreDox_B_002.fcs")
-    gated_data = singlet_gate(ungated_data, ["FSC-A", "FSC-H"])
+    ungated_data = fc.io.FCSData("./PreDox_B_002.fcs")
+    gated_data = singlet_gate(ungated_data, ["FSC-A", "FSC-H"], r_ready=True)
     print(gated_data.shape)
-    gated_data = clust_2d_gate(ungated_data, ["FSC-A", "SSC-A"], target = [7.5*10**4, 5*10**4])
+    gated_data = clust_2d_gate(ungated_data, ["FSC-A", "SSC-A"], target = [7.5*10**4, 5*10**4], r_ready=True)
     print(gated_data.shape)
-    gated_data = transitional_gate(ungated_data, ["FSC-A", "SSC-A"], target = [7.5*10**4, 5*10**4])
+    gated_data = transitional_gate(ungated_data, ["FSC-A", "SSC-A"], target = [7.5*10**4, 5*10**4], r_ready=True)
     print(gated_data.shape)
