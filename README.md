@@ -113,3 +113,11 @@ def FUNCTION_NAME_HERE(data, gating_channels, KEY_WORD_ARGUMENTS, **kwargs):
 ```
 
 For detailed examples of how to write the Python and R functions, look at the functions defined in `pyflowbat.gating.r` and `pyflowbat.r_gating.py`.
+
+## Tested on
+
+PyFlowBAT has been tested on:
+
+- macOS 13.3.1 (Apple M1)
+- macOS ??? (???)
+- Ubuntu Jammy Jellyfish 22.0.04 (Arm64)
