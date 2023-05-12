@@ -22,7 +22,7 @@ poetry install
 
 On some versions of Linux, the Python tkinter package may not be installed.
 Since this is a standard library package, it cannot be installed using pip.
-Instead, to install run the following command, or the equivalent on your Linux distro:
+To install tkinter, run the following&mdash;or equivalent for your Linux distro&mdash;command:
 
 ```text
 sudo apt get install python3-tkinter
