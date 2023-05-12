@@ -8,6 +8,37 @@ PyFlowBAT can be used to
 
 ---
 
+## Requirements
+
+PyFlowBAT needs Python version `>=3.10` and poetry installed to work.
+After both have been installed, running the following will install the necessary Python packages.
+
+```text
+poetry lock
+poetry install
+```
+
+### Linux installation note
+
+On some versions of Linux, the Python tkinter package may not be installed.
+Since this is a standard library package, it cannot be installed using pip.
+Instead, to install run the following command, or the equivalent on your Linux distro:
+
+```text
+sudo apt get install python3-tkinter
+```
+
+
+### Poetry installation
+
+#### Linux
+
+On Ubuntu, run:
+
+```text
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
 ## (add documentation here)
 
 <!-- [ ] MAKE THIS AN ACTUAL README -->
