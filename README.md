@@ -118,6 +118,6 @@ For detailed examples of how to write the Python and R functions, look at the fu
 
 PyFlowBAT has been tested on:
 
-- macOS 13.3.1 (Apple M1)
-- macOS ??? (???)
-- Ubuntu Jammy Jellyfish 22.0.04 (Arm64)
+- macOS 13.3.1 (ARM64)
+- macOS ??? (x86)
+- Ubuntu Jammy Jellyfish 22.0.04 (Aarch64)
