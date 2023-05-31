@@ -461,7 +461,7 @@ class Workspace:
         for sample in compensation_samples:
             samples_to_compensate.append(self.sample_collections[sample_collection][sample])
         if len(compensation_channels) == 2:
-            self.compensation_matrix = self._calculate_compensation_matrix_2_channels(samples_to_compensate[0], samples_to_compensate[1], compensation_channels[0], compensation_channels[1], threshold, k)
+            self.compensation_matrix = (compensation_channels, self._calculate_compensation_matrix_2_channels(samples_to_compensate[0], samples_to_compensate[1], compensation_channels[0], compensation_channels[1], threshold, k))
         elif len(compensation_channels) == 3:
         #     self.compensation_matrix = self._calculate_compensation_matrix_n_channels(samples_to_compensate[0], samples_to_compensate[1], samples_to_compensate[2], compensation_channels[0], compensation_channels[1], compensation_channels[2], threshold, k)
         # else:
@@ -516,8 +516,13 @@ class Workspace:
         # [ ]: change save to Union[bool, str] so save can be path to file to save
         graphable_data = []
         for _, val in enumerate(data):
-            graphable_data.append([self.stats_collections[val[0]], val[1], val[2]])
-        graphable_data
+            if len(val) <= 3:
+                graphable_data.append([self.stats_collections[val[0]], val[1], val[2]])
+            else:
+                curr_data = self.stats_collections[val[0]]
+                for i in range(len(val) - 3):
+                    curr_data = curr_data.loc[curr_data[val[3 + i][0]] == val[3 + i][1]]
+                graphable_data.append([curr_data, val[1], val[2]])
         plt.close()
         for i in range(len(graphable_data)):
             plt.scatter(graphable_data[i][0][graphable_data[i][1]], graphable_data[i][0][graphable_data[i][2]], zorder=3)
