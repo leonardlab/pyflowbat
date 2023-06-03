@@ -10,7 +10,7 @@ import statsmodels.api as sm
 from . import _std_vals
 
 class Workspace:
-    
+
     def __init__(self, stylesheet = _std_vals.std_pfb_style, lims_file = "_std", full_output = False) -> None:
         self.full_output = full_output
         if lims_file == "_std":
@@ -263,86 +263,94 @@ class Workspace:
                     + str(e_32)
                 )
                 print("\n\n")
-                c_21, c_31, c_12, c_32, c_13, c_23 = np.add(
-                    [c_21, c_31, c_12, c_32, c_13, c_23],
-                    np.multiply(-1 * k, [e_21, e_31, e_12, e_32, e_13, e_23]),
-                )
+                
+            c_21, c_31, c_12, c_32, c_13, c_23 = np.add(
+                [c_21, c_31, c_12, c_32, c_13, c_23],
+                np.multiply(-1 * k, [e_21, e_31, e_12, e_32, e_13, e_23]),
+            )
 
-                A = np.array([[1.0, c_12, c_13], [c_21, 1.0, c_23], [c_31, c_32, 1.0]])
+            A = np.array([[1.0, c_12, c_13], [c_21, 1.0, c_23], [c_31, c_32, 1.0]])
 
-                copy_fcs_ch_1[:, ch_1] = np.dot(
-                    A[0, :],
-                    np.asarray(
-                        [fcs_ch_1[:, ch_1].T, fcs_ch_1[:, ch_2].T, fcs_ch_1[:, ch_3].T]
-                    ),
-                )
-                copy_fcs_ch_1[:, ch_2] = np.dot(
-                    A[1, :],
-                    np.asarray(
-                        [fcs_ch_1[:, ch_1].T, fcs_ch_1[:, ch_2].T, fcs_ch_1[:, ch_3].T]
-                    ),
-                )
-                copy_fcs_ch_1[:, ch_3] = np.dot(
-                    A[2, :],
-                    np.asarray(
-                        [fcs_ch_1[:, ch_1].T, fcs_ch_1[:, ch_2].T, fcs_ch_1[:, ch_3].T]
-                    ),
-                )
-                copy_fcs_ch_2[:, ch_1] = np.dot(
-                    A[0, :],
-                    np.asarray(
-                        [fcs_ch_2[:, ch_1].T, fcs_ch_2[:, ch_2].T, fcs_ch_2[:, ch_3].T]
-                    ),
-                )
-                copy_fcs_ch_2[:, ch_2] = np.dot(
-                    A[1, :],
-                    np.asarray(
-                        [fcs_ch_2[:, ch_1].T, fcs_ch_2[:, ch_2].T, fcs_ch_2[:, ch_3].T]
-                    ),
-                )
-                copy_fcs_ch_2[:, ch_3] = np.dot(
-                    A[2, :],
-                    np.asarray(
-                        [fcs_ch_2[:, ch_1].T, fcs_ch_2[:, ch_2].T, fcs_ch_2[:, ch_3].T]
-                    ),
-                )
-                copy_fcs_ch_3[:, ch_1] = np.dot(
-                    A[0, :],
-                    np.asarray(
-                        [fcs_ch_3[:, ch_1].T, fcs_ch_3[:, ch_2].T, fcs_ch_3[:, ch_3].T]
-                    ),
-                )
-                copy_fcs_ch_3[:, ch_2] = np.dot(
-                    A[1, :],
-                    np.asarray(
-                        [fcs_ch_3[:, ch_1].T, fcs_ch_3[:, ch_2].T, fcs_ch_3[:, ch_3].T]
-                    ),
-                )
-                copy_fcs_ch_3[:, ch_3] = np.dot(
-                    A[2, :],
-                    np.asarray(
-                        [fcs_ch_3[:, ch_1].T, fcs_ch_3[:, ch_2].T, fcs_ch_3[:, ch_3].T]
-                    ),
-                )
+            copy_fcs_ch_1[:, ch_1] = np.dot(
+                A[0, :],
+                np.asarray(
+                    [fcs_ch_1[:, ch_1].T, fcs_ch_1[:, ch_2].T, fcs_ch_1[:, ch_3].T]
+                ),
+            )
+            copy_fcs_ch_1[:, ch_2] = np.dot(
+                A[1, :],
+                np.asarray(
+                    [fcs_ch_1[:, ch_1].T, fcs_ch_1[:, ch_2].T, fcs_ch_1[:, ch_3].T]
+                ),
+            )
+            copy_fcs_ch_1[:, ch_3] = np.dot(
+                A[2, :],
+                np.asarray(
+                    [fcs_ch_1[:, ch_1].T, fcs_ch_1[:, ch_2].T, fcs_ch_1[:, ch_3].T]
+                ),
+            )
+            copy_fcs_ch_2[:, ch_1] = np.dot(
+                A[0, :],
+                np.asarray(
+                    [fcs_ch_2[:, ch_1].T, fcs_ch_2[:, ch_2].T, fcs_ch_2[:, ch_3].T]
+                ),
+            )
+            copy_fcs_ch_2[:, ch_2] = np.dot(
+                A[1, :],
+                np.asarray(
+                    [fcs_ch_2[:, ch_1].T, fcs_ch_2[:, ch_2].T, fcs_ch_2[:, ch_3].T]
+                ),
+            )
+            copy_fcs_ch_2[:, ch_3] = np.dot(
+                A[2, :],
+                np.asarray(
+                    [fcs_ch_2[:, ch_1].T, fcs_ch_2[:, ch_2].T, fcs_ch_2[:, ch_3].T]
+                ),
+            )
+            copy_fcs_ch_3[:, ch_1] = np.dot(
+                A[0, :],
+                np.asarray(
+                    [fcs_ch_3[:, ch_1].T, fcs_ch_3[:, ch_2].T, fcs_ch_3[:, ch_3].T]
+                ),
+            )
+            copy_fcs_ch_3[:, ch_2] = np.dot(
+                A[1, :],
+                np.asarray(
+                    [fcs_ch_3[:, ch_1].T, fcs_ch_3[:, ch_2].T, fcs_ch_3[:, ch_3].T]
+                ),
+            )
+            copy_fcs_ch_3[:, ch_3] = np.dot(
+                A[2, :],
+                np.asarray(
+                    [fcs_ch_3[:, ch_1].T, fcs_ch_3[:, ch_2].T, fcs_ch_3[:, ch_3].T]
+                ),
+            )
 
-                e_21 = (
-                    sm.OLS(copy_fcs_ch_1[:, ch_2], copy_fcs_ch_1[:, ch_1]).fit()
-                ).params[0]
-                e_31 = (
-                    sm.OLS(copy_fcs_ch_1[:, ch_3], copy_fcs_ch_1[:, ch_1]).fit()
-                ).params[0]
-                e_12 = (
-                    sm.OLS(copy_fcs_ch_2[:, ch_1], copy_fcs_ch_2[:, ch_2]).fit()
-                ).params[0]
-                e_32 = (
-                    sm.OLS(copy_fcs_ch_2[:, ch_3], copy_fcs_ch_2[:, ch_2]).fit()
-                ).params[0]
-                e_13 = (
-                    sm.OLS(copy_fcs_ch_3[:, ch_1], copy_fcs_ch_3[:, ch_3]).fit()
-                ).params[0]
-                e_23 = (
-                    sm.OLS(copy_fcs_ch_3[:, ch_2], copy_fcs_ch_3[:, ch_3]).fit()
-                ).params[0]
+            e_21 = (
+                sm.OLS(copy_fcs_ch_1[:, ch_2], copy_fcs_ch_1[:, ch_1]).fit()
+            ).params[0]
+            e_31 = (
+                sm.OLS(copy_fcs_ch_1[:, ch_3], copy_fcs_ch_1[:, ch_1]).fit()
+            ).params[0]
+            e_12 = (
+                sm.OLS(copy_fcs_ch_2[:, ch_1], copy_fcs_ch_2[:, ch_2]).fit()
+            ).params[0]
+            e_32 = (
+                sm.OLS(copy_fcs_ch_2[:, ch_3], copy_fcs_ch_2[:, ch_2]).fit()
+            ).params[0]
+            e_13 = (
+                sm.OLS(copy_fcs_ch_3[:, ch_1], copy_fcs_ch_3[:, ch_3]).fit()
+            ).params[0]
+            e_23 = (
+                sm.OLS(copy_fcs_ch_3[:, ch_2], copy_fcs_ch_3[:, ch_3]).fit()
+            ).params[0]
+
+        c_21, c_31, c_12, c_32, c_13, c_23 = np.add(
+            [c_21, c_31, c_12, c_32, c_13, c_23],
+            np.multiply(-1 * k, [e_21, e_31, e_12, e_32, e_13, e_23]),
+        )
+
+        A = np.array([[1.0, c_12, c_13], [c_21, 1.0, c_23], [c_31, c_32, 1.0]])
 
         if self.full_output:
             n = n + 1
@@ -364,13 +372,7 @@ class Workspace:
                 + str(e_32)
             )
             print("\n\n")
-            c_21, c_31, c_12, c_32, c_13, c_23 = np.add(
-                [c_21, c_31, c_12, c_32, c_13, c_23],
-                np.multiply(-1 * k, [e_21, e_31, e_12, e_32, e_13, e_23]),
-            )
-
-            A = np.array([[1.0, c_12, c_13], [c_21, 1.0, c_23], [c_31, c_32, 1.0]])
-
+            
             fc.plot.density2d(copy_fcs_ch_1, channels=[ch_1, ch_2], mode="scatter")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_1, channels=[ch_1, ch_3], mode="scatter")
@@ -411,29 +413,36 @@ class Workspace:
                 print(A)
                 print("\nErrors: " + str(e_12) + ", " + str(e_21))
                 print("\n\n")
-                c_21, c_12 = np.add([c_21, c_12], np.multiply(-1 * k, [e_21, e_12]))
+            c_21, c_12 = np.add([c_21, c_12], np.multiply(-1 * k, [e_21, e_12]))
 
-                A = np.array([[1.0, c_12], [c_21, 1.0]])
+            A = np.array([[1.0, c_12], [c_21, 1.0]])
 
-                copy_fcs_ch_1[:, ch_1] = np.dot(
-                    A[0, :], np.asarray([fcs_ch_1[:, ch_1].T, fcs_ch_1[:, ch_2].T])
-                )
-                copy_fcs_ch_1[:, ch_2] = np.dot(
-                    A[1, :], np.asarray([fcs_ch_1[:, ch_1].T, fcs_ch_1[:, ch_2].T])
-                )
-                copy_fcs_ch_2[:, ch_1] = np.dot(
-                    A[0, :], np.asarray([fcs_ch_2[:, ch_1].T, fcs_ch_2[:, ch_2].T])
-                )
-                copy_fcs_ch_2[:, ch_2] = np.dot(
-                    A[1, :], np.asarray([fcs_ch_2[:, ch_1].T, fcs_ch_2[:, ch_2].T])
-                )
+            copy_fcs_ch_1[:, ch_1] = np.dot(
+                A[0, :], np.asarray([fcs_ch_1[:, ch_1].T, fcs_ch_1[:, ch_2].T])
+            )
+            copy_fcs_ch_1[:, ch_2] = np.dot(
+                A[1, :], np.asarray([fcs_ch_1[:, ch_1].T, fcs_ch_1[:, ch_2].T])
+            )
+            copy_fcs_ch_2[:, ch_1] = np.dot(
+                A[0, :], np.asarray([fcs_ch_2[:, ch_1].T, fcs_ch_2[:, ch_2].T])
+            )
+            copy_fcs_ch_2[:, ch_2] = np.dot(
+                A[1, :], np.asarray([fcs_ch_2[:, ch_1].T, fcs_ch_2[:, ch_2].T])
+            )
 
-                e_21 = (
-                    sm.OLS(copy_fcs_ch_1[:, ch_2], copy_fcs_ch_1[:, ch_1]).fit()
-                ).params[0]
-                e_12 = (
-                    sm.OLS(copy_fcs_ch_2[:, ch_1], copy_fcs_ch_2[:, ch_2]).fit()
-                ).params[0]
+            e_21 = (
+                sm.OLS(copy_fcs_ch_1[:, ch_2], copy_fcs_ch_1[:, ch_1]).fit()
+            ).params[0]
+            e_12 = (
+                sm.OLS(copy_fcs_ch_2[:, ch_1], copy_fcs_ch_2[:, ch_2]).fit()
+            ).params[0]
+        
+        (
+            c_21,
+            c_12,
+        ) = np.add([c_21, c_12], np.multiply(-1 * k, [e_21, e_12]))
+
+        A = np.array([[1.0, c_12], [c_21, 1.0]])
 
         if self.full_output:
             n = n + 1
@@ -442,12 +451,6 @@ class Workspace:
             print(A)
             print("\nErrors: " + str(e_12) + ", " + str(e_21))
             print("\n\n")
-            (
-                c_21,
-                c_12,
-            ) = np.add([c_21, c_12], np.multiply(-1 * k, [e_21, e_12]))
-
-            A = np.array([[1.0, c_12], [c_21, 1.0]])
 
             fc.plot.density2d(copy_fcs_ch_1, channels=[ch_1, ch_2], mode="scatter")
             plt.show()
