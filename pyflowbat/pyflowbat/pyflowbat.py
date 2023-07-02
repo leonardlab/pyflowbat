@@ -1,4 +1,3 @@
-# [ ] inputs for functions into **kwargs
 import os
 import FlowCal as fc
 import pandas as pd
@@ -274,31 +273,31 @@ class Workspace:
     # COMPENSATION #
     ################
 
-    def _calculate_compensation_matrix_n_channels(self, list_comp_samples, channels, threshold=10**-4, k=0.1):
-        num_ch = len(channels)
-        comp_samples = np.copy(np.asarray(list_comp_samples))
-        error_comp_samples = np.copy(comp_samples)
-        print(error_comp_samples)
+    # def _calculate_compensation_matrix_n_channels(self, list_comp_samples, channels, threshold=10**-4, k=0.1):
+    #     num_ch = len(channels)
+    #     comp_samples = np.copy(np.asarray(list_comp_samples))
+    #     error_comp_samples = np.copy(comp_samples)
+    #     print(error_comp_samples)
 
-        coeffs = np.diag(np.ones(num_ch))
+    #     coeffs = np.diag(np.ones(num_ch))
 
-        errors = np.ones((num_ch, num_ch))
+    #     errors = np.ones((num_ch, num_ch))
 
-        while not (np.abs(errors) < threshold).all():
+    #     while not (np.abs(errors) < threshold).all():
 
-            coeffs = np.add(coeffs, np.multiply(-1 * k, errors))
+    #         coeffs = np.add(coeffs, np.multiply(-1 * k, errors))
 
-            for i in range(np.shape(coeffs)[0]):
-                (error_comp_samples[i])[:, channels] = (np.dot(coeffs, comp_samples[i][:, channels].T)).T
+    #         for i in range(np.shape(coeffs)[0]):
+    #             (error_comp_samples[i])[:, channels] = (np.dot(coeffs, comp_samples[i][:, channels].T)).T
 
-            for i in range(np.shape(coeffs)[0]):
-                # error_comp_samples[i][~np.isfinite(error_comp_samples[i])] = 0
-                for j in range(np.shape(coeffs)[1]):
-                    if i != j:
-                        errors[i][j] = (sm.OLS(error_comp_samples[i][:, channels[j]], error_comp_samples[i][:, channels[i]]).fit()).params[0]
+    #         for i in range(np.shape(coeffs)[0]):
+    #             # error_comp_samples[i][~np.isfinite(error_comp_samples[i])] = 0
+    #             for j in range(np.shape(coeffs)[1]):
+    #                 if i != j:
+    #                     errors[i][j] = (sm.OLS(error_comp_samples[i][:, channels[j]], error_comp_samples[i][:, channels[i]]).fit()).params[0]
                         
 
-        return coeffs
+    #     return coeffs
 
     def _calculate_compensation_matrix_3_channels(self, fcs_ch_1, fcs_ch_2, fcs_ch_3, ch_1, ch_2, ch_3, threshold=10**-4, k=0.1):
         c_12 = c_13 = c_21 = c_23 = c_31 = c_32 = 0.0
@@ -601,13 +600,13 @@ class Workspace:
             data_copy[key] = curr_data
         return data_copy
 
-    def _apply_compensation_matrix_n_channels(self, data_to_compensate, channels, A):
-        # note: function can be vectorized
-        data_copy = data_to_compensate.copy()
-        for key in data_to_compensate.keys():
-            for i in range(len(channels)):
-                data_copy[key][i][:, channels] = (np.dot(A, data_copy[:, channels].T)).T
-        return data_copy
+    # def _apply_compensation_matrix_n_channels(self, data_to_compensate, channels, A):
+    #     # note: function can be vectorized
+    #     data_copy = data_to_compensate.copy()
+    #     for key in data_to_compensate.keys():
+    #         for i in range(len(channels)):
+    #             data_copy[key][i][:, channels] = (np.dot(A, data_copy[:, channels].T)).T
+    #     return data_copy
 
     def apply_compensation_matrix(self, sample_collection, new_sample_collection):
         compensation_channels = self.compensation_matrix[0]
