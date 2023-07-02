@@ -4,13 +4,11 @@
 
 PyFlowBAT is an open-source Python package for performing high-throughput batch analysis of flow cytometry data.
 
-PyFlowBAT can be used to
-
 ---
 
-## (add documentation here)
+## Example usage
 
-<!-- [ ] MAKE THIS AN ACTUAL README -->
+For an example of use, view the example notebooks [here](https://github.com/ellifteria/pyflowbat-examples).
 
 ## Advanced usage
 
@@ -88,5 +86,5 @@ For detailed examples of how to write the Python and R functions, look at the fu
 PyFlowBAT has been tested on:
 
 - macOS 13.3.1 (ARM64)
-- macOS ??? (x86)
+- macOS 13.4.1 (ARM64)
 - Ubuntu Jammy Jellyfish 22.0.04 (Aarch64)
