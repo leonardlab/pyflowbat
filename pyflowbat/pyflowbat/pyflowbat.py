@@ -6,10 +6,32 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import statsmodels.api as sm
+import warnings
 
 from . import _std_vals
 
+class _StatisticsExtraction:
+
+    def __init__(self, sample_collection, statistics_collection, include, not_include) -> None:
+        self.sample_collection = sample_collection
+        self.statistics_collection = statistics_collection
+        self.include = include
+        self.not_include = not_include
+
+    def follows_rule(self, name):
+        for word in self.include:
+            if word not in name:
+                return False
+        for word in self.not_include:
+            if word in name:
+                return False
+        return True
+
 class Workspace:
+
+    ###################################
+    # CONSTRUCTOR AND WORKSPACE SETUP #
+    ###################################
 
     def __init__(self, stylesheet = _std_vals.std_pfb_style, lims_file = "_std", full_output = False) -> None:
         self.full_output = full_output
@@ -26,8 +48,18 @@ class Workspace:
         mpl.rcParams["figure.dpi"] = 150
         if stylesheet is not None:
             mpl.style.use(stylesheet)
-        #[ ] add R functionality
         self.r_ready = False
+
+    def _read_lims_file(self, lims_file) -> dict[str, list[int]]:
+        lims_data = pd.read_csv(lims_file)
+        lims_dict = {}
+        for header in list(lims_data.columns):
+            lims_dict[header] = list(lims_data[header])
+        return lims_dict
+
+    ###################
+    # R FUNCTIONALITY #
+    ###################
 
     def _verify_R_installation(self):
         from subprocess import CalledProcessError
@@ -44,15 +76,14 @@ class Workspace:
             return
         if check_R_installation:
             self._verify_R_installation()
+        else:
+            warnings.warn("Using R gating functions without verifying R is installed is not recommended", RuntimeWarning)
         from . import r_gating
         self.r_ready = True
 
-    def _read_lims_file(self, lims_file) -> dict[str, list[int]]:
-        lims_data = pd.read_csv(lims_file)
-        lims_dict = {}
-        for header in list(lims_data.columns):
-            lims_dict[header] = list(lims_data[header])
-        return lims_dict
+    ######################
+    # BEADS CALCULATIONS #
+    ######################
 
     def _read_bead_conversion_file(self, conversions_file) -> dict[str, np.ndarray]:
         beads_data = pd.read_csv(conversions_file)
@@ -92,6 +123,9 @@ class Workspace:
                     [0, np.max(beads_means[count])],
                     [0, np.max(beads_means[count]) * models[count].params[0]],
                 )
+                plt.title(f"Beads conversion\n{ch[0]} to  {ch[1]}", y=1.08)
+                plt.xlabel(f"{ch[0]} expression")
+                plt.ylabel(f"{ch[1]} expression")
                 plt.show()
         conv_fctrs = {}
         for count, ch in enumerate(beads_fluorescent_channels):
@@ -101,6 +135,10 @@ class Workspace:
 
     def calculate_beads_factors(self, beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file = "_std"):
         self.conversion_factors = self._perform_beads_calculations(beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file)
+
+    ##################
+    # SAMPLE LOADING #
+    ##################
 
     def _load_samples(self, file_folder, file_quals):
         extracted_data = {}
@@ -117,6 +155,10 @@ class Workspace:
     def load_samples(self, sample_collection_name, samples_folder, samples_quals):
         self.sample_collections[sample_collection_name] = self._load_samples(samples_folder, samples_quals)
 
+    #####################################
+    # STATISTIC EXTRACTION FROM SAMPLES #
+    #####################################
+
     def _extract_statistics(self, data, reqs, columns):
         columns_list = [""] * len(columns)
         for i in range(len(columns)):
@@ -132,59 +174,105 @@ class Workspace:
                     row[j] = columns[j][1](file_name, fcs_data)
                 destination.loc[i] = row
         return destination
+    
+    def create_statistic_extraction(
+            self,
+            sample_collection,
+            statistics_collection,
+            include,
+            not_include,
+            statistic_names
+    ):
+        extraction = _StatisticsExtraction(
+            sample_collection,
+            statistics_collection,
+            include,
+            not_include
+        )
+        df = pd.DataFrame(columns=statistic_names)
+        self.stats_collections[statistics_collection] = df
+        return extraction
 
-    def extract_statistics(self, sample_collection_name, statistics_collection_name, samples_quals, statistics_columns):
-        self.stats_collections[statistics_collection_name] = self._extract_statistics(self.sample_collections[sample_collection_name], samples_quals, statistics_columns)
+    def extract_statistics(
+            self,
+            extraction: _StatisticsExtraction,
+            name,
+            operation,
+            **kwargs
+        ):
+        data = self.sample_collections[extraction.sample_collection].copy()
+        data_names = list(data.keys())
+        data_list = []
+        for i in range(len(data_names)):
+            file_name = str(data_names[i])
+            if extraction.follows_rule(file_name):
+                fcs_data = data[file_name]
+                data_list.append(operation(name = file_name, data = fcs_data, **kwargs))
+        self.stats_collections[extraction.statistics_collection][name] = data_list
 
-    def combine_replicates(self, statistics_collection_name, combined_statistics_collection_name, replicate_definition, columns):
-        #[ ]: vectorize
-        data = self.stats_collections[statistics_collection_name].copy()
-        num_errs = 1
-        for i in range(len(columns)):
-            if columns[i][2] == True:
-                num_errs += 1
-        num_columns = len(columns) + num_errs
-        columns_list = [""] * num_columns
-        num_errs = 0
-        for i in range(len(columns)):
-            columns_list[i] = columns[i][0]
-            if columns[i][2] == True:
-                columns_list[len(columns) + num_errs] = columns[i][0] + "_stdErr"
-                num_errs += 1
-        destination = pd.DataFrame(columns=columns_list)
-        k = 0
-        i = 0
-        j = 0
-        while i < (len(data) - 1):
-            start_repl = replicate_definition(data.iloc[i])
-            new_data = [""] * num_columns
-            num_errs = 0
-            for l in range(len(columns)):
-                j = i + 1
-                if columns[l][2] == True:
-                    new_data[l] = [columns[l][1](data.iloc[i])]
-                    while j < len(data) and start_repl == replicate_definition(data.iloc[j]):
-                        new_data[l].append(columns[l][1](data.iloc[j]))
-                        j += 1
-                    new_data[l] = np.asarray(new_data[l])
-                    new_data[len(columns) + num_errs] = np.std(new_data[l], ddof=1) / np.sqrt(np.size(new_data[l]))
-                    num_errs = num_errs + 1
-                    new_data[l] = (np.asarray(new_data[l])).mean()
-                else:
-                    new_data[l] = columns[l][1](data.iloc[i])
-            destination.loc[k] = new_data
-            i = j
-            k = k + 1
-        self.stats_collections[combined_statistics_collection_name] = destination
+    ##########################
+    # STATISTIC MANIPULATION #
+    ##########################
 
-    def apply_operation(self, statistics_collection, new_statistics_collection, rules, inputs):
-        #[ ] vectorize
+    def combine_replicates(
+            self,
+            statistics_collection_name,
+            combined_statistics_collection_name,
+            combine_by,
+            combination_operations,
+            sem_cols
+        ):
+        df = self.stats_collections[statistics_collection_name].copy()
+        columns_to_drop_combine = [i for i in list(df.columns)
+                           if (i not in list(combination_operations.keys())
+                               and i not in combine_by)]
+        combined = df.drop(
+            columns = columns_to_drop_combine
+        ).groupby(
+            combine_by
+        ).aggregate(
+            combination_operations
+        ).reset_index()
+        columns_to_drop_sem = [i for i in list(df.columns)
+                           if (i not in sem_cols
+                               and i not in combine_by)]
+        sems = df.drop(
+            columns = columns_to_drop_sem
+        ).groupby(
+            combine_by
+        ).sem(
+        ).reset_index(
+        ).rename(
+            columns = {
+                str(x): (str(x) + '_stdErr') for
+                x in sem_cols
+            }
+        )
+        df = combined.merge(sems)
+        self.stats_collections[combined_statistics_collection_name] = df
+
+    def apply_operation(
+            self,
+            statistics_collection,
+            new_statistics_collection,
+            statistic,
+            new_statistic,
+            operation,
+            **kwargs
+        ):
+        # note: function can be vectorized
         data = self.stats_collections[statistics_collection]
-        data_copy = data.copy()
-        for i in range(len(data)):
-            for j in range(len(rules)):
-                data_copy.loc[i, rules[j][0]] = rules[j][1](data_copy.iloc[i], inputs)
-        self.stats_collections[new_statistics_collection] = data_copy
+        if new_statistics_collection not in self.stats_collections.keys() or self.stats_collections[new_statistics_collection] is None:
+            self.stats_collections[new_statistics_collection] = data.copy()
+        new_data = self.stats_collections[new_statistics_collection]
+        if new_statistic is None:
+            warnings.warn("No new statistic created", RuntimeWarning)
+            return
+        new_data[new_statistic] = (data[statistic]).apply(operation, axis=1, **kwargs)
+
+    ################
+    # COMPENSATION #
+    ################
 
     def _calculate_compensation_matrix_n_channels(self, list_comp_samples, channels, threshold=10**-4, k=0.1):
         num_ch = len(channels)
@@ -230,16 +318,22 @@ class Workspace:
         n = -1
         if self.full_output:
             fc.plot.density2d(copy_fcs_ch_1, channels=[ch_1, ch_2], mode="scatter")
+            plt.title(f"Pre-compensation scatter: impact of\n{ch_1} on {ch_2}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_1, channels=[ch_1, ch_3], mode="scatter")
+            plt.title(f"Pre-compensation scatter: impact of\n{ch_1} on {ch_3}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_2, channels=[ch_2, ch_1], mode="scatter")
+            plt.title(f"Pre-compensation scatter: impact of\n{ch_2} on {ch_2}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_2, channels=[ch_2, ch_3], mode="scatter")
+            plt.title(f"Pre-compensation scatter: impact of\n{ch_2} on {ch_3}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_3, channels=[ch_3, ch_1], mode="scatter")
+            plt.title(f"Pre-compensation scatter: impact of\n{ch_3} on {ch_1}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_3, channels=[ch_3, ch_2], mode="scatter")
+            plt.title(f"Pre-compensation scatter: impact of\n{ch_3} on {ch_2}")
             plt.show()
 
         while not (np.abs([e_21, e_31, e_12, e_32, e_13, e_23]) < threshold).all():
@@ -374,16 +468,22 @@ class Workspace:
             print("\n\n")
             
             fc.plot.density2d(copy_fcs_ch_1, channels=[ch_1, ch_2], mode="scatter")
+            plt.title(f"Post-compensation scatter: impact of\n{ch_1} on {ch_2}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_1, channels=[ch_1, ch_3], mode="scatter")
+            plt.title(f"Post-compensation scatter: impact of\n{ch_1} on {ch_3}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_2, channels=[ch_2, ch_1], mode="scatter")
+            plt.title(f"Post-compensation scatter: impact of\n{ch_2} on {ch_1}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_2, channels=[ch_2, ch_3], mode="scatter")
+            plt.title(f"Post-compensation scatter: impact of\n{ch_2} on {ch_3}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_3, channels=[ch_3, ch_1], mode="scatter")
+            plt.title(f"Post-compensation scatter: impact of\n{ch_3} on {ch_1}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_3, channels=[ch_3, ch_2], mode="scatter")
+            plt.title(f"Post-compensation scatter: impact of\n{ch_3} on {ch_2}")
             plt.show()
             print(A)
         return A
@@ -401,8 +501,10 @@ class Workspace:
         n = -1
         if self.full_output:
             fc.plot.density2d(copy_fcs_ch_1, channels=[ch_1, ch_2], mode="scatter")
+            plt.title(f"Pre-compensation scatter: impact of\n{ch_1} on {ch_2}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_2, channels=[ch_2, ch_1], mode="scatter")
+            plt.title(f"Pre-compensation scatter: impact of\n{ch_2} on {ch_1}")
             plt.show()
 
         while not (np.abs([e_21, e_12]) < threshold).all():
@@ -453,8 +555,10 @@ class Workspace:
             print("\n\n")
 
             fc.plot.density2d(copy_fcs_ch_1, channels=[ch_1, ch_2], mode="scatter")
+            plt.title(f"Post-compensation scatter: impact of\n{ch_1} on {ch_2}")
             plt.show()
             fc.plot.density2d(copy_fcs_ch_2, channels=[ch_2, ch_1], mode="scatter")
+            plt.title(f"Post-compensation scatter: impact of\n{ch_2} on {ch_1}")
             plt.show()
             print(A)
         return A
@@ -466,9 +570,10 @@ class Workspace:
         if len(compensation_channels) == 2:
             self.compensation_matrix = (compensation_channels, self._calculate_compensation_matrix_2_channels(samples_to_compensate[0], samples_to_compensate[1], compensation_channels[0], compensation_channels[1], threshold, k))
         elif len(compensation_channels) == 3:
-        #     self.compensation_matrix = self._calculate_compensation_matrix_n_channels(samples_to_compensate[0], samples_to_compensate[1], samples_to_compensate[2], compensation_channels[0], compensation_channels[1], compensation_channels[2], threshold, k)
-        # else:
-            self.compensation_matrix = (compensation_channels, self._calculate_compensation_matrix_n_channels(samples_to_compensate, compensation_channels, threshold, k))
+            self.compensation_matrix = self._calculate_compensation_matrix_n_channels(samples_to_compensate[0], samples_to_compensate[1], samples_to_compensate[2], compensation_channels[0], compensation_channels[1], compensation_channels[2], threshold, k)
+        else:
+            raise NotImplementedError("Compensation not implemented for more than 3 colors") 
+        #     self.compensation_matrix = (compensation_channels, self._calculate_compensation_matrix_n_channels(samples_to_compensate, compensation_channels, threshold, k))
 
     def _apply_compensation_matrix_2_channels(self, data_to_compensate, ch_1, ch_2, A):
         data_copy = data_to_compensate.copy()
@@ -497,8 +602,7 @@ class Workspace:
         return data_copy
 
     def _apply_compensation_matrix_n_channels(self, data_to_compensate, channels, A):
-        # [ ] converts channels to tuple
-        # [ ] use advanced slicing data[:, (chnls)] = A * data[:, (chnls)]
+        # note: function can be vectorized
         data_copy = data_to_compensate.copy()
         for key in data_to_compensate.keys():
             for i in range(len(channels)):
@@ -513,10 +617,29 @@ class Workspace:
         elif len(compensation_channels) == 3:
             self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_3_channels(self.sample_collections[sample_collection], compensation_channels[0], compensation_channels[1], compensation_channels[2], compensation_matrix)
         else:
-            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_n_channels(self.sample_collections[sample_collection], compensation_channels, compensation_matrix)
+            raise NotImplementedError("Compensation not implemented for more than 3 colors") 
+            # self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_n_channels(self.sample_collections[sample_collection], compensation_channels, compensation_matrix)
+
+    ##########
+    # GATING #
+    ##########
+
+    def _apply_gate(self, data_to_gate, gating_function, **kwargs):
+        data_copy = data_to_gate.copy()
+        return gating_function(data_copy.copy(), r_ready = self.r_ready, limits = self.lims, **kwargs)
+
+    def apply_gate(self, sample_collection_to_gate, new_sample_collection, gating_function, **kwargs):
+        self.sample_collections[new_sample_collection] = self._apply_gate(
+            self.sample_collections[sample_collection_to_gate],
+            gating_function,
+            **kwargs
+        )
+
+    #################
+    # VISUALIZATION #
+    #################
 
     def graph_statistics(self, data, errors=(False, False), legend=None, title=None, labels=(None, None), xlog=False, ylog=False, save=True):
-        # [ ]: change save to Union[bool, str] so save can be path to file to save
         graphable_data = []
         for _, val in enumerate(data):
             if len(val) <= 3:
@@ -543,31 +666,26 @@ class Workspace:
         plt.title(title, y=1.08)
         plt.xlabel(labels[0])
         plt.ylabel(labels[1])
-        if save:
+        if save == True or isinstance(save, str):
             if title == None:
-                title = "untitled"
-            title = title.replace('\n', '').replace(':', '-')
-            plt.savefig(""+('_').join(('').join(title.split('.')).split(' '))+".png", dpi=500, bbox_inches ="tight")
+                save_path = "untitled"
+            save_path = title.replace('\n', '').replace(':', '-')
+            if isinstance(save, str):
+                save_path = save
+            plt.savefig(""+('_').join(('').join(save_path.split('.')).split(' '))+".png", dpi=500, bbox_inches ="tight")
         plt.show()
-   
-    def _apply_gate(self, data_to_gate, gating_function, inputs, gate_type):
-        data_copy = data_to_gate.copy()
-        if 'limits' not in inputs:
-            inputs['limits'] = self.lims
-        # [ ] all gates to work the same way
-        if gate_type != 1:
-            return gating_function(data_copy.copy(), r_ready = self.r_ready, **inputs)
-        for key in data_copy.keys():
-            data_copy[key] = gating_function(data_copy[key], r_ready = self.r_ready, **inputs)
-        return data_copy
-
-    def apply_gate(self, sample_collection_to_gate, new_sample_collection, gating_function, inputs = {}, gate_type = 1):
-        self.sample_collections[new_sample_collection] = self._apply_gate(self.sample_collections[sample_collection_to_gate], gating_function, inputs, gate_type)
     
     def visualize_plot_change(self, sample_collection_0, data_0, sample_collection_f, data_f, channels: list[str]) -> None:
-        self.visualize_plot_overlay([[sample_collection_0, data_0], [sample_collection_f, data_f]], ["#FF0000", "#1E90FF"], channels, [0.04, 0.06], ['.', 'o'])
+        self.visualize_plot_overlay(
+            [[sample_collection_0, data_0], [sample_collection_f, data_f]],
+            ["#FF0000", "#1E90FF"],
+            channels,
+            [0.04, 0.06],
+            ['.', 'o'],
+            [sample_collection_0, sample_collection_f],
+            f"Change in sample {data_0}\naka {data_f}: {sample_collection_0} to {sample_collection_f}")
 
-    def visualize_plot_overlay(self, plots: list[list], colors: list[str], channels: list[str], sizes: list[int] = None, markers: list[str] = None) -> None:
+    def visualize_plot_overlay(self, plots: list[list], colors: list[str], channels: list[str], sizes: list[int] = None, markers: list[str] = None, legend: list = None, title: str = None) -> None:
         if sizes is None:
             sizes = [0.01] * len(plots)
         if markers is None:
@@ -578,5 +696,11 @@ class Workspace:
             plt.xlim(self.lims[channels[0]])
         if channels[1] in self.lims:
             plt.ylim(self.lims[channels[1]])
+        if legend is not None:
+            plt.legend(legend, loc='center left', bbox_to_anchor=(1,0.5))
+        if title is not None:
+            plt.title(title, y=1.08)
+        plt.xlabel(channels[0])
+        plt.ylabel(channels[1])
         plt.show()
     

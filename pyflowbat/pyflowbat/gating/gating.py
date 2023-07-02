@@ -2,33 +2,49 @@ import numpy as np
 import statsmodels.api as sm
 from scipy.signal import find_peaks, peak_prominences
 
-# [ ]: change gate names to nouns
+#####################
+# PERCENTILE GATING #
+#####################
 
-def find_percentile(flow_sample, channel, percentile, **kwargs):
+def find_percentile(workspace, sample_collection, sample_name, channel, percentile, **kwargs):
+    flow_sample = workspace.sample_collections[sample_collection][sample_name]
     return np.percentile(flow_sample[:, channel], percentile)
 
-def gate_high_low(flow_sample, channel, high = None, low = None, **kwargs):
-    if high is None:
-        high = np.max(flow_sample[:, channel])
-    if low is None:
-        low = np.min(flow_sample[:, channel])
-    data_copy = flow_sample.copy()
-    data_copy = data_copy[data_copy[:, channel] > low]
-    data_copy = data_copy[data_copy[:, channel] < high]
+def gate_high_low(data_to_gate, channel, high = None, low = None, **kwargs):
+    data_copy = data_to_gate.copy()
+    for key in data_copy.keys():
+        flow_sample = data_to_gate[key]
+        if high is None:
+            high = np.max(flow_sample[:, channel])
+        if low is None:
+            low = np.min(flow_sample[:, channel])
+        flow_sample = flow_sample[flow_sample[:, channel] > low]
+        flow_sample = flow_sample[flow_sample[:, channel] < high]
     return data_copy
 
-def gate_singlets(flow_sample, a = 10**10, b = 2*10**4, **kwargs):
-    copied_sample = np.copy(np.asarray([flow_sample[:, 'FSC-A'], flow_sample[:, 'FSC-H']])).T
-    data_ch = np.asarray([copied_sample[:, 0], copied_sample[:, 1]]).T
-    lin_reg_res = sm.OLS([0, np.median(copied_sample[:, 1])], [0, np.median(copied_sample[:, 0])]).fit()
-    center = np.array(np.asarray([np.median(copied_sample[:, 0]), np.median(copied_sample[:, 1])]))
-    theta = np.arctan(lin_reg_res.params[0])
-    data_centered = data_ch - center
-    R = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), np.cos(theta)]])
-    data_rotated = np.dot(data_centered, R.T)
-    mask = ((data_rotated[:,0]/a)**2 + (data_rotated[:,1]/b)**2 <= 1)
-    data_gated = flow_sample[mask]
-    return data_gated
+##################
+# SINGLET GATING #
+##################
+
+def gate_singlets(data_to_gate, a = 10**10, b = 2*10**4, **kwargs):
+    data_copy = data_to_gate.copy()
+    for key in data_copy.keys():
+        flow_sample = data_copy[key]
+        copied_sample = np.copy(np.asarray([flow_sample[:, 'FSC-A'], flow_sample[:, 'FSC-H']])).T
+        data_ch = np.asarray([copied_sample[:, 0], copied_sample[:, 1]]).T
+        lin_reg_res = sm.OLS([0, np.median(copied_sample[:, 1])], [0, np.median(copied_sample[:, 0])]).fit()
+        center = np.array(np.asarray([np.median(copied_sample[:, 0]), np.median(copied_sample[:, 1])]))
+        theta = np.arctan(lin_reg_res.params[0])
+        data_centered = data_ch - center
+        R = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), np.cos(theta)]])
+        data_rotated = np.dot(data_centered, R.T)
+        mask = ((data_rotated[:,0]/a)**2 + (data_rotated[:,1]/b)**2 <= 1)
+        flow_sample = flow_sample[mask]
+    return data_copy
+
+##############
+# HEK GATING #
+##############
 
 def find_HEK_gate(data_to_gate):
     data_copy = data_to_gate.copy()
