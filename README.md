@@ -7,12 +7,12 @@
 PyFlowBAT requires Python version `>=3.10` and the following packages:
 
 ```text
-numpy >= 1.24.2
-matplotlib >= 3.7.1
-FlowCal >= 1.3.0
-statsmodels >= 0.13.5
-scipy >= 1.10.1
-pandas >= 2.0.0
+numpy == 1.24.2
+matplotlib == 3.7.1
+FlowCal == 1.3.0
+statsmodels == 0.13.5
+scipy == 1.10.1
+pandas == 2.0.0
 ```
 
 To install PyFlowBAT and all required dependencies, run
