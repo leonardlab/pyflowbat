@@ -3,6 +3,8 @@ import rpy2.robjects.numpy2ri
 import numpy as np
 rpy2.robjects.numpy2ri.activate()
 
+from . import r_gating_general
+
 r = ro.r
 
 r('''

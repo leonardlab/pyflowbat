@@ -21,7 +21,7 @@ release = '0.0.1'
 extensions = ['sphinx.ext.autodoc']
 
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '*/setup*']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'setup.py']
 
 autodoc_mock_imports = ["rpy2"]
 
@@ -29,5 +29,5 @@ autodoc_mock_imports = ["rpy2"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
+html_theme = 'renku'
 html_static_path = ['_static']

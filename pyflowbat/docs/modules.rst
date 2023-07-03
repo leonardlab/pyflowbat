@@ -5,4 +5,3 @@ pyflowbat
    :maxdepth: 4
 
    pyflowbat
-   setup

@@ -78,6 +78,7 @@ class Workspace:
         else:
             warnings.warn("Using R gating functions without verifying R is installed is not recommended", RuntimeWarning)
         from . import r_gating
+        from . import r_gating_general
         self.r_ready = True
 
     ######################
