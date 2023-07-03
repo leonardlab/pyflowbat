@@ -21,7 +21,7 @@ release = '0.0.1'
 extensions = ['sphinx.ext.autodoc']
 
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'r_gating.py', 'r_gating_general.py']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '*/setup.py']
 
 autodoc_mock_imports = ["rpy2"]
 

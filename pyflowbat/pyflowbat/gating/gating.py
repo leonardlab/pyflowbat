@@ -46,7 +46,7 @@ def gate_singlets(data_to_gate, a = 10**10, b = 2*10**4, **kwargs):
 # HEK GATING #
 ##############
 
-def find_HEK_gate(data_to_gate):
+def _find_HEK_gate(data_to_gate):
     data_copy = data_to_gate.copy()
     H_fsc, edges_fsc = np.histogram(data_copy[:, 'FSC-A'], bins=1024)
     inv_H_fsc = np.max(H_fsc)-H_fsc
@@ -58,7 +58,7 @@ def find_HEK_gate(data_to_gate):
     peaks_ssc, _ = find_peaks(inv_H_ssc, prominence = np.max(peak_prominences(inv_H_ssc, peaks_ssc)[0])-1)
     return edges_fsc[peaks_fsc[0]], edges_ssc[peaks_ssc[0]]
 
-def gate_heks_helper(data_to_gate, manual_cutoffs, limits):
+def _gate_heks_helper(data_to_gate, manual_cutoffs, limits):
     max_FSC = limits[0]
     max_SSC = limits[1]
     if manual_cutoffs is not None:
@@ -83,16 +83,16 @@ def gate_heks(data_to_gate, method, samples, limits, **kwargs):
     data_copy = data_to_gate.copy()
     if method == 'unique':
         for key in data_to_gate.keys():
-            data_copy[key] = gate_heks_helper(data_copy[key], None, limits)
+            data_copy[key] = _gate_heks_helper(data_copy[key], None, limits)
     else:
         avg_FSC = []
         avg_SSC = []
         for i in samples:
-            tmp1, tmp2 = find_HEK_gate(data_copy[i])
+            tmp1, tmp2 = _find_HEK_gate(data_copy[i])
             avg_FSC.append(tmp1)
             avg_SSC.append(tmp2)
         avg_FSC = np.mean(avg_FSC)
         avg_SSC = np.mean(avg_SSC)
         for key in data_to_gate.keys():
-            data_copy[key] = gate_heks_helper(data_copy[key], {'FSC-A': avg_FSC, 'SSC-A': avg_SSC}, limits)
+            data_copy[key] = _gate_heks_helper(data_copy[key], {'FSC-A': avg_FSC, 'SSC-A': avg_SSC}, limits)
     return data_copy
