@@ -100,7 +100,7 @@ class Workspace:
     def init_r(
             self,
             check_R_installation: bool = True
-        ):
+        ) -> None:
         if self.r_ready:
             print("R functionality already initialized")
             return
@@ -170,7 +170,7 @@ class Workspace:
             beads_fluorescent_channels: list[str],
             beads_num_pops: int,
             beads_conversions_file: str = "_std"
-        ):
+        ) -> None:
         self.conversion_factors = self._perform_beads_calculations(
             beads_file_file_path, beads_fluorescent_channels,
             beads_num_pops, beads_conversions_file)
@@ -185,7 +185,7 @@ class Workspace:
             samples_folder_path: str,
             include: list[str],
             not_include: list[str]
-        ):
+        ) -> None:
 
         def samples_quals(name):
             for word in include:
@@ -218,7 +218,7 @@ class Workspace:
             include: list[str],
             not_include: list[str],
             statistic_names: list[str]
-    ):
+    ) -> _StatisticsExtraction:
         """
         Creates a rule needed for extracting statistics from a sample collection
 
@@ -245,7 +245,7 @@ class Workspace:
             statistc_name: str,
             operation: Callable,
             **kwargs
-        ):
+        ) -> None:
         data = self.sample_collections[extraction.sample_collection].copy()
         data_names = list(data.keys())
         data_list = []

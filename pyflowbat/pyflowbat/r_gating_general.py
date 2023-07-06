@@ -13,7 +13,7 @@ def general_r_gate(
         arguments: dict,
         r_ready: bool = False,
         **kwargs
-    ):
+    ) -> dict[str, np.ndarray]:
     if not r_ready:
         raise RuntimeError("R functionality has not been initialized")
     
