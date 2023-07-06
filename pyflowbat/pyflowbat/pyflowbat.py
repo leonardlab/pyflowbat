@@ -166,12 +166,14 @@ class Workspace:
 
     def calculate_beads_factors(
             self,
-            beads_file: str, 
+            beads_file_file_path: str, 
             beads_fluorescent_channels: list[str],
             beads_num_pops: int,
             beads_conversions_file: str = "_std"
         ):
-        self.conversion_factors = self._perform_beads_calculations(beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file)
+        self.conversion_factors = self._perform_beads_calculations(
+            beads_file_file_path, beads_fluorescent_channels,
+            beads_num_pops, beads_conversions_file)
 
     ##################
     # SAMPLE LOADING #
@@ -180,7 +182,7 @@ class Workspace:
     def load_samples(
             self,
             sample_collection_name: str,
-            samples_folder: str,
+            samples_folder_path: str,
             include: list[str],
             not_include: list[str]
         ):
@@ -195,12 +197,12 @@ class Workspace:
             return True
         
         extracted_data = {}
-        file_names = os.listdir(samples_folder)
+        file_names = os.listdir(samples_folder_path)
         file_names.sort()
         for i in range(len(file_names)):
             file_name = str(file_names[i])
             if samples_quals(file_name):
-                file_path = os.path.join(samples_folder, file_names[i])
+                file_path = os.path.join(samples_folder_path, file_names[i])
                 fcs_data = fc.io.FCSData(file_path)
                 extracted_data[file_names[i]] = fcs_data 
         self.sample_collections[sample_collection_name] = extracted_data
@@ -211,8 +213,8 @@ class Workspace:
     
     def create_statistic_extraction(
             self,
-            sample_collection: str,
-            statistics_collection: str,
+            sample_collection_name: str,
+            statistics_collection_name: str,
             include: list[str],
             not_include: list[str],
             statistic_names: list[str]
@@ -228,19 +230,19 @@ class Workspace:
         :returns: the extraction rule to be used in `extract_samples`
         """
         extraction = _StatisticsExtraction(
-            sample_collection,
-            statistics_collection,
+            sample_collection_name,
+            statistics_collection_name,
             include,
             not_include
         )
         df = pd.DataFrame(columns=statistic_names)
-        self.stats_collections[statistics_collection] = df
+        self.stats_collections[statistics_collection_name] = df
         return extraction
 
     def extract_statistic(
             self,
             extraction: _StatisticsExtraction,
-            name: str,
+            statistc_name: str,
             operation: Callable,
             **kwargs
         ):
@@ -252,7 +254,7 @@ class Workspace:
             if extraction.follows_rule(file_name):
                 fcs_data = data[file_name]
                 data_list.append(operation(name = file_name, data = fcs_data, **kwargs))
-        self.stats_collections[extraction.statistics_collection][name] = data_list
+        self.stats_collections[extraction.statistics_collection][statistc_name] = data_list
 
     ##########################
     # STATISTIC MANIPULATION #
@@ -297,22 +299,24 @@ class Workspace:
 
     def apply_operation(
             self,
-            statistics_collection: str,
-            new_statistics_collection: str,
-            statistic: str,
-            new_statistic: str,
+            statistics_collection_name: str,
+            new_statistics_collection_name: str,
+            statistic_name: str,
+            new_statistic_name: str,
             operation: Callable,
             **kwargs
         ) -> None:
         # note: function can be vectorized
-        data = self.stats_collections[statistics_collection]
-        if new_statistics_collection not in self.stats_collections.keys() or self.stats_collections[new_statistics_collection] is None:
-            self.stats_collections[new_statistics_collection] = data.copy()
-        new_data = self.stats_collections[new_statistics_collection]
-        if new_statistic is None:
+        data = self.stats_collections[statistics_collection_name]
+        if new_statistics_collection_name not in self.stats_collections.keys() or self.stats_collections[
+            new_statistics_collection_name] is None:
+            self.stats_collections[new_statistics_collection_name] = data.copy()
+        new_data = self.stats_collections[new_statistics_collection_name]
+        if new_statistic_name is None:
             warnings.warn("No new statistic created", RuntimeWarning)
             return
-        new_data[new_statistic] = (data[statistic]).apply(operation, axis=1, **kwargs)
+        new_data[new_statistic_name] = (data[statistic_name]).apply(
+            operation, axis=1, **kwargs)
 
     ################
     # COMPENSATION #
@@ -609,7 +613,7 @@ class Workspace:
 
     def calculate_compensation_matrix(
             self,
-            sample_collection: str,
+            sample_collection_name: str,
             compensation_samples: str,
             compensation_channels: list[str],
             threshold: int = 10**-4,
@@ -617,11 +621,15 @@ class Workspace:
         ) -> None:
         samples_to_compensate = []
         for sample in compensation_samples:
-            samples_to_compensate.append(self.sample_collections[sample_collection][sample])
+            samples_to_compensate.append(self.sample_collections[sample_collection_name][sample])
         if len(compensation_channels) == 2:
-            self.compensation_matrix = (compensation_channels, self._calculate_compensation_matrix_2_channels(samples_to_compensate[0], samples_to_compensate[1], compensation_channels[0], compensation_channels[1], threshold, k))
+            self.compensation_matrix = (compensation_channels, self._calculate_compensation_matrix_2_channels(
+                samples_to_compensate[0], samples_to_compensate[1], compensation_channels[0], compensation_channels[1], threshold, k))
         elif len(compensation_channels) == 3:
-            self.compensation_matrix = self._calculate_compensation_matrix_n_channels(samples_to_compensate[0], samples_to_compensate[1], samples_to_compensate[2], compensation_channels[0], compensation_channels[1], compensation_channels[2], threshold, k)
+            self.compensation_matrix = self._calculate_compensation_matrix_n_channels(
+                samples_to_compensate[0], samples_to_compensate[1], samples_to_compensate[2],
+                compensation_channels[0], compensation_channels[1], compensation_channels[2],
+                threshold, k)
         else:
             raise NotImplementedError("Compensation not implemented for more than 3 colors") 
         #     self.compensation_matrix = (compensation_channels, self._calculate_compensation_matrix_n_channels(samples_to_compensate, compensation_channels, threshold, k))
@@ -662,15 +670,19 @@ class Workspace:
 
     def apply_compensation_matrix(
             self,
-            sample_collection: str,
-            new_sample_collection: str
+            sample_collection_name: str,
+            new_sample_collection_name: str
         ) -> None:
         compensation_channels = self.compensation_matrix[0]
         compensation_matrix = self.compensation_matrix[1]
         if len(compensation_channels) == 2:
-            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_2_channels(self.sample_collections[sample_collection], compensation_channels[0], compensation_channels[1], compensation_matrix)
+            self.sample_collections[new_sample_collection_name] = self._apply_compensation_matrix_2_channels(
+                self.sample_collections[sample_collection_name], compensation_channels[0],
+                compensation_channels[1], compensation_matrix)
         elif len(compensation_channels) == 3:
-            self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_3_channels(self.sample_collections[sample_collection], compensation_channels[0], compensation_channels[1], compensation_channels[2], compensation_matrix)
+            self.sample_collections[new_sample_collection_name] = self._apply_compensation_matrix_3_channels(
+                self.sample_collections[sample_collection_name], compensation_channels[0],
+                compensation_channels[1], compensation_channels[2], compensation_matrix)
         else:
             raise NotImplementedError("Compensation not implemented for more than 3 colors") 
             # self.sample_collections[new_sample_collection] = self._apply_compensation_matrix_n_channels(self.sample_collections[sample_collection], compensation_channels, compensation_matrix)
@@ -681,13 +693,13 @@ class Workspace:
 
     def apply_gate(
             self,
-            sample_collection_to_gate: str,
-            new_sample_collection: str,
+            sample_collection_name: str,
+            new_sample_collection_name: str,
             gating_function: Callable,
             **kwargs
         ) -> None:
-        data_copy = (self.sample_collections[sample_collection_to_gate]).copy()
-        self.sample_collections[new_sample_collection] = gating_function(
+        data_copy = (self.sample_collections[sample_collection_name]).copy()
+        self.sample_collections[new_sample_collection_name] = gating_function(
             data_copy.copy(), r_ready = self.r_ready, limits = self.lims, **kwargs)
 
     #################
@@ -742,20 +754,20 @@ class Workspace:
     
     def visualize_plot_change(
             self,
-            sample_collection_0: str,
-            data_0: str,
-            sample_collection_f: str,
-            data_f: str,
+            sample_collection_name_0: str,
+            sample_name_0: str,
+            sample_collection_name_f: str,
+            sample_name_f: str,
             channels: list[str]
         ) -> None:
         self.visualize_plot_overlay(
-            [[sample_collection_0, data_0], [sample_collection_f, data_f]],
+            [[sample_collection_name_0, sample_name_0], [sample_collection_name_f, sample_name_f]],
             ["#FF0000", "#1E90FF"],
             channels,
             [0.04, 0.06],
             ['.', 'o'],
-            [sample_collection_0, sample_collection_f],
-            f"Change in sample {data_0}\naka {data_f}: {sample_collection_0} to {sample_collection_f}")
+            [sample_collection_name_0, sample_collection_name_f],
+            f"Change in sample {sample_name_0}\naka {sample_name_f}: {sample_collection_name_0} to {sample_collection_name_f}")
 
     def visualize_plot_overlay(
             self,
