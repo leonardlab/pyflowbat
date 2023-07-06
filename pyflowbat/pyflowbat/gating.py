@@ -1,16 +1,31 @@
 import numpy as np
 import statsmodels.api as sm
 from scipy.signal import find_peaks, peak_prominences
+from .pyflowbat import Workspace
+from typing import Optional, Union
 
 #####################
 # PERCENTILE GATING #
 #####################
 
-def find_percentile(workspace, sample_collection, sample_name, channel, percentile, **kwargs):
+def find_percentile(
+        workspace: Workspace,
+        sample_collection: str,
+        sample_name: str,
+        channel: list[str],
+        percentile: float,
+        **kwargs
+    ) -> float:
     flow_sample = workspace.sample_collections[sample_collection][sample_name]
     return np.percentile(flow_sample[:, channel], percentile)
 
-def gate_high_low(data_to_gate, channel, high = None, low = None, **kwargs):
+def gate_high_low(
+        data_to_gate: dict[str, np.ndarray],
+        channel: str,
+        high: Optional[float] = None,
+        low: Optional[float] = None,
+        **kwargs
+    ) -> dict[str, np.ndarray]:
     data_copy = data_to_gate.copy()
     for key in data_copy.keys():
         flow_sample = data_to_gate[key]
@@ -26,7 +41,12 @@ def gate_high_low(data_to_gate, channel, high = None, low = None, **kwargs):
 # SINGLET GATING #
 ##################
 
-def gate_singlets(data_to_gate, a = 10**10, b = 2*10**4, **kwargs):
+def gate_singlets(
+        data_to_gate: dict[str, np.ndarray],
+        a: float = 10**10,
+        b: float= 2*10**4,
+        **kwargs
+    ) -> dict[str, np.ndarray]:
     data_copy = data_to_gate.copy()
     for key in data_copy.keys():
         flow_sample = data_copy[key]
@@ -78,7 +98,13 @@ def _gate_heks_helper(data_to_gate, manual_cutoffs, limits):
     gated_data = gated_data[np.logical_and(gated_data[:, 'FSC-A'] < max_FSC, gated_data[:, 'SSC-A'] < max_SSC)]
     return gated_data
 
-def gate_heks(data_to_gate, method, samples, limits, **kwargs):
+def gate_heks(
+        data_to_gate: dict[str, np.ndarray],
+        method: str,
+        samples: list[str],
+        limits: dict[str, list[float]],
+        **kwargs
+    ) -> dict[str, np.ndarray]:
     limits = [limits["FSC-A"][1], limits["SSC-A"][1]]
     data_copy = data_to_gate.copy()
     if method == 'unique':

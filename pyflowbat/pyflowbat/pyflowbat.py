@@ -6,18 +6,41 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import statsmodels.api as sm
 import warnings
+from typing import Union, Optional, Callable
 
 from . import _std_vals
 
+
+SamplesCollection = dict[str, dict[str, fc.io.FCSData]]
+StatisticsCollection = dict[str, pd.DataFrame]
+
+comments_to_add = """
+        Extracts 
+
+        :param param1: this is a first param
+        :param param2: this is a second param
+        :returns: this is a description of what is returned
+        :raises keyError: raises an exception
+        """
+
 class _StatisticsExtraction:
 
-    def __init__(self, sample_collection, statistics_collection, include, not_include) -> None:
+    def __init__(
+            self,
+            sample_collection: SamplesCollection,
+            statistics_collection: StatisticsCollection,
+            include: list[str],
+            not_include: list[str]
+            ) -> None:
         self.sample_collection = sample_collection
         self.statistics_collection = statistics_collection
         self.include = include
         self.not_include = not_include
 
-    def follows_rule(self, name):
+    def follows_rule(
+            self,
+            name: str
+        ):
         for word in self.include:
             if word not in name:
                 return False
@@ -32,7 +55,12 @@ class Workspace:
     # CONSTRUCTOR AND WORKSPACE SETUP #
     ###################################
 
-    def __init__(self, stylesheet = _std_vals.std_pfb_style, lims_file = "_std", full_output = False) -> None:
+    def __init__(
+            self,
+            stylesheet: dict = _std_vals.std_pfb_style,
+            lims_file: str = "_std",
+            full_output: bool = False
+        ) -> None:
         self.full_output = full_output
         if lims_file == "_std":
             self.lims = _std_vals.std_lims
@@ -69,7 +97,10 @@ class Workspace:
             raise RuntimeError("No R installation could be found")
         return True
 
-    def init_r(self, check_R_installation = True):
+    def init_r(
+            self,
+            check_R_installation: bool = True
+        ):
         if self.r_ready:
             print("R functionality already initialized")
             return
@@ -133,56 +164,69 @@ class Workspace:
             conv_fctrs["" + ch[0] +"_stderr"] = models[count].bse[0]
         return conv_fctrs
 
-    def calculate_beads_factors(self, beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file = "_std"):
+    def calculate_beads_factors(
+            self,
+            beads_file: str, 
+            beads_fluorescent_channels: list[str],
+            beads_num_pops: int,
+            beads_conversions_file: str = "_std"
+        ):
         self.conversion_factors = self._perform_beads_calculations(beads_file, beads_fluorescent_channels, beads_num_pops, beads_conversions_file)
 
     ##################
     # SAMPLE LOADING #
     ##################
 
-    def _load_samples(self, file_folder, file_quals):
+    def load_samples(
+            self,
+            sample_collection_name: str,
+            samples_folder: str,
+            include: list[str],
+            not_include: list[str]
+        ):
+
+        def samples_quals(name):
+            for word in include:
+                if word not in name:
+                    return False
+            for word in not_include:
+                if word in name:
+                    return False
+            return True
+        
         extracted_data = {}
-        file_names = os.listdir(file_folder)
+        file_names = os.listdir(samples_folder)
         file_names.sort()
         for i in range(len(file_names)):
             file_name = str(file_names[i])
-            if file_quals(file_name):
-                file_path = os.path.join(file_folder, file_names[i])
+            if samples_quals(file_name):
+                file_path = os.path.join(samples_folder, file_names[i])
                 fcs_data = fc.io.FCSData(file_path)
-                extracted_data[file_names[i]] = fcs_data
-        return extracted_data
-    
-    def load_samples(self, sample_collection_name, samples_folder, samples_quals):
-        self.sample_collections[sample_collection_name] = self._load_samples(samples_folder, samples_quals)
+                extracted_data[file_names[i]] = fcs_data 
+        self.sample_collections[sample_collection_name] = extracted_data
 
     #####################################
     # STATISTIC EXTRACTION FROM SAMPLES #
     #####################################
-
-    def _extract_statistics(self, data, reqs, columns):
-        columns_list = [""] * len(columns)
-        for i in range(len(columns)):
-            columns_list[i] = columns[i][0]
-        destination = pd.DataFrame(columns=columns_list)
-        data_names = list(data.copy().keys())
-        for i in range(len(data_names)):
-            file_name = str(data_names[i])
-            if reqs(file_name):
-                fcs_data = data[file_name]
-                row = [None] * len(columns)
-                for j in range(len(columns)):
-                    row[j] = columns[j][1](file_name, fcs_data)
-                destination.loc[i] = row
-        return destination
     
     def create_statistic_extraction(
             self,
-            sample_collection,
-            statistics_collection,
-            include,
-            not_include,
-            statistic_names
+            sample_collection: str,
+            statistics_collection: str,
+            include: list[str],
+            not_include: list[str],
+            statistic_names: list[str]
     ):
+        """
+        Creates a rule needed for extracting statistics from a sample collection
+
+        :param sample_collection: the name of the sample collection from which to extract
+        :param statistics_collection: the name of the statistics collection to create and extract statistics to
+        :param include: a list of words that must be included in the samples from which to extract statistics
+        :param not_include: a list of words that must NOT be included in the samples from which to extract statistics
+        :param statistic_names: a list of the stastics that will be extracted using this rule
+        :returns: the extraction rule to be used in `extract_samples`
+        """
         extraction = _StatisticsExtraction(
             sample_collection,
             statistics_collection,
@@ -193,11 +237,11 @@ class Workspace:
         self.stats_collections[statistics_collection] = df
         return extraction
 
-    def extract_statistics(
+    def extract_statistic(
             self,
             extraction: _StatisticsExtraction,
-            name,
-            operation,
+            name: str,
+            operation: Callable,
             **kwargs
         ):
         data = self.sample_collections[extraction.sample_collection].copy()
@@ -216,12 +260,12 @@ class Workspace:
 
     def combine_replicates(
             self,
-            statistics_collection_name,
-            combined_statistics_collection_name,
-            combine_by,
-            combination_operations,
-            sem_cols
-        ):
+            statistics_collection_name: str,
+            combined_statistics_collection_name: str,
+            combine_by: list[str],
+            combination_operations: Union[str, Callable],
+            sem_cols: list[str]
+        ) -> None:
         df = self.stats_collections[statistics_collection_name].copy()
         columns_to_drop_combine = [i for i in list(df.columns)
                            if (i not in list(combination_operations.keys())
@@ -253,13 +297,13 @@ class Workspace:
 
     def apply_operation(
             self,
-            statistics_collection,
-            new_statistics_collection,
-            statistic,
-            new_statistic,
-            operation,
+            statistics_collection: str,
+            new_statistics_collection: str,
+            statistic: str,
+            new_statistic: str,
+            operation: Callable,
             **kwargs
-        ):
+        ) -> None:
         # note: function can be vectorized
         data = self.stats_collections[statistics_collection]
         if new_statistics_collection not in self.stats_collections.keys() or self.stats_collections[new_statistics_collection] is None:
@@ -563,7 +607,14 @@ class Workspace:
             print(A)
         return A
 
-    def calculate_compensation_matrix(self, sample_collection, compensation_samples, compensation_channels, threshold=10**-4, k=0.1):
+    def calculate_compensation_matrix(
+            self,
+            sample_collection: str,
+            compensation_samples: str,
+            compensation_channels: list[str],
+            threshold: int = 10**-4,
+            k: float = 0.1
+        ) -> None:
         samples_to_compensate = []
         for sample in compensation_samples:
             samples_to_compensate.append(self.sample_collections[sample_collection][sample])
@@ -609,7 +660,11 @@ class Workspace:
     #             data_copy[key][i][:, channels] = (np.dot(A, data_copy[:, channels].T)).T
     #     return data_copy
 
-    def apply_compensation_matrix(self, sample_collection, new_sample_collection):
+    def apply_compensation_matrix(
+            self,
+            sample_collection: str,
+            new_sample_collection: str
+        ) -> None:
         compensation_channels = self.compensation_matrix[0]
         compensation_matrix = self.compensation_matrix[1]
         if len(compensation_channels) == 2:
@@ -624,22 +679,32 @@ class Workspace:
     # GATING #
     ##########
 
-    def _apply_gate(self, data_to_gate, gating_function, **kwargs):
-        data_copy = data_to_gate.copy()
-        return gating_function(data_copy.copy(), r_ready = self.r_ready, limits = self.lims, **kwargs)
-
-    def apply_gate(self, sample_collection_to_gate, new_sample_collection, gating_function, **kwargs):
-        self.sample_collections[new_sample_collection] = self._apply_gate(
-            self.sample_collections[sample_collection_to_gate],
-            gating_function,
+    def apply_gate(
+            self,
+            sample_collection_to_gate: str,
+            new_sample_collection: str,
+            gating_function: Callable,
             **kwargs
-        )
+        ) -> None:
+        data_copy = (self.sample_collections[sample_collection_to_gate]).copy()
+        self.sample_collections[new_sample_collection] = gating_function(
+            data_copy.copy(), r_ready = self.r_ready, limits = self.lims, **kwargs)
 
     #################
     # VISUALIZATION #
     #################
 
-    def graph_statistics(self, data, errors=(False, False), legend=None, title=None, labels=(None, None), xlog=False, ylog=False, save=True):
+    def graph_statistics(
+            self,
+            data: list[list[Union[str, list[str]]]],
+            errors: tuple[bool, bool] = (False, False),
+            legend: Optional[str] = None,
+            title: Optional[str] = None,
+            labels: tuple[Optional[str], Optional[str]] = (None, None),
+            xlog: bool = False,
+            ylog: bool = False,
+            save: Union[bool, str] = True
+        ) -> None:
         graphable_data = []
         for _, val in enumerate(data):
             if len(val) <= 3:
@@ -675,7 +740,14 @@ class Workspace:
             plt.savefig(""+('_').join(('').join(save_path.split('.')).split(' '))+".png", dpi=500, bbox_inches ="tight")
         plt.show()
     
-    def visualize_plot_change(self, sample_collection_0, data_0, sample_collection_f, data_f, channels: list[str]) -> None:
+    def visualize_plot_change(
+            self,
+            sample_collection_0: str,
+            data_0: str,
+            sample_collection_f: str,
+            data_f: str,
+            channels: list[str]
+        ) -> None:
         self.visualize_plot_overlay(
             [[sample_collection_0, data_0], [sample_collection_f, data_f]],
             ["#FF0000", "#1E90FF"],
@@ -685,7 +757,16 @@ class Workspace:
             [sample_collection_0, sample_collection_f],
             f"Change in sample {data_0}\naka {data_f}: {sample_collection_0} to {sample_collection_f}")
 
-    def visualize_plot_overlay(self, plots: list[list], colors: list[str], channels: list[str], sizes: list[int] = None, markers: list[str] = None, legend: list = None, title: str = None) -> None:
+    def visualize_plot_overlay(
+            self,
+            plots: list[list],
+            colors: list[str],
+            channels: list[str],
+            sizes: Optional[list[int]] = None,
+            markers: Optional[list[str]] = None,
+            legend: Optional[list] = None,
+            title: Optional[str] = None
+        ) -> None:
         if sizes is None:
             sizes = [0.01] * len(plots)
         if markers is None:
