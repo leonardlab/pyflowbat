@@ -351,6 +351,19 @@ class Workspace:
             operation: Callable,
             **kwargs
         ) -> None:
+        """
+        Extracts a statistic for a StatisticExtraction rule.
+        
+        :param extraction: the StatisticExtraction rule to use for the
+            extraction
+        :type extraction: pyflowbat.pyflowbat.StatisticsExtraction
+        :param statistc_name: the name of the statistic being created
+        :type statistc_name: str
+        :param operation: the function defining the operation defining
+            the extraction
+        :type operation: function/Callable
+        :param \*\*kwargs: keywords to pass to the operation
+        """ 
         data = self.sample_collections[extraction.sample_collection_name].copy()
         data_names = list(data.keys())
         data_list = []
