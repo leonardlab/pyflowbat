@@ -818,7 +818,8 @@ class Workspace:
         :type sample_collection_name: str
         :param new_sample_collection_name: the name of the new sample collection to create
             for the compensated samples
-        :type new_sample_collection_name: str"""
+        :type new_sample_collection_name: str
+        """
         if self.compensation_matrix is None:
             raise ValueError("The workspace compensation matrix is not defined, please run calculate a matrix first")
         compensation_channels = self.compensation_matrix[0]
@@ -846,6 +847,18 @@ class Workspace:
             gating_function: Callable,
             **kwargs
         ) -> None:
+        """
+        Applies a specified gate to a sample collection.
+        
+        :param sample_collection_name: the name of the sample collection to gate
+        :type sample_collection_name: str
+        :param new_sample_collection_name: the name of the new sample collection to create
+            for the gated samples
+        :type new_sample_collection_name: str
+        :param gating_function: the function defining the gate to apply
+        :type gating_function: function/Callable
+        :param \*\*kwargs: keywords to pass to the gating function
+        """
         data_copy = (self.sample_collections[sample_collection_name]).copy()
         self.sample_collections[new_sample_collection_name] = gating_function(
             data_copy.copy(), r_ready = self.r_ready, limits = self.lims, **kwargs)
