@@ -957,45 +957,76 @@ class Workspace:
     def visualize_plot_change(
             self,
             sample_collection_name_0: str,
-            sample_name_0: str,
             sample_collection_name_f: str,
-            sample_name_f: str,
-            channels: list[str]
+            sample_name: str,
+            channel_names: tuple[str, str]
         ) -> None:
+        """
+        Visualizes the change in a sample from one collection to another.
+        
+        :param sample_collection_name_0: the name of the initial sample collection
+        :type sample_collection_name_0: str
+        :param sample_collection_name_f: the name of the final sample collection
+        :type sample_collection_name_f: str
+        :param sample_name: the name of the sample to visualize
+        :type sample_name: str
+        :param channel_names: the names of the channels to visualize change in
+        :type channel_names: tuple[str, str]
+        """
         self.visualize_plot_overlay(
-            [[sample_collection_name_0, sample_name_0], [sample_collection_name_f, sample_name_f]],
+            [[sample_collection_name_0, sample_name], [sample_collection_name_f, sample_name]],
             ["#FF0000", "#1E90FF"],
-            channels,
+            channel_names,
             [0.04, 0.06],
             ['.', 'o'],
             [sample_collection_name_0, sample_collection_name_f],
-            f"Change in sample {sample_name_0}\naka {sample_name_f}: {sample_collection_name_0} to {sample_collection_name_f}")
+            f"Change in sample {sample_name}:\n{sample_collection_name_0} to {sample_collection_name_f}")
 
     def visualize_plot_overlay(
             self,
             plots: list[list],
             colors: list[str],
-            channels: list[str],
+            channel_names: tuple[str, str],
             sizes: Optional[list[int]] = None,
             markers: Optional[list[str]] = None,
             legend: Optional[list] = None,
             title: Optional[str] = None
         ) -> None:
+        """
+        Visualizes an overlay between samples.
+        
+        :param plots: the data to plot
+        :type plots: list[list]
+        :param colors: the names of the colors for the overlayed plots
+        :type colors: list[str]
+        :param channel_names: the names of the channels to visualize change in
+        :type channel_names: tuple[str, str]
+        :param sizes: the sizes of the scatters to overlay
+        :type sizes: Optional[list[int]]
+        :param markers: the markers for the plot
+        :type markers: Optional[list[str]]
+        :param legend: the legend for the plot
+        :type legend: Optional[list]
+        :param title: the title for the plot
+        :type title: Optional[str]
+        """
         if sizes is None:
             sizes = [0.01] * len(plots)
         if markers is None:
             markers = ["."] * len(plots)
         for count, plot in enumerate(plots):
-            plt.scatter(self.sample_collections[plot[0]][plot[1]][:, channels[0]], self.sample_collections[plot[0]][plot[1]][:, channels[1]], c=colors[count], s=sizes[count], marker=markers[count])
-        if channels[0] in self.lims:
-            plt.xlim(self.lims[channels[0]])
-        if channels[1] in self.lims:
-            plt.ylim(self.lims[channels[1]])
+            plt.scatter(self.sample_collections[plot[0]][plot[1]][:, channel_names[0]],
+                        self.sample_collections[plot[0]][plot[1]][:, channel_names[1]],
+                        c=colors[count], s=sizes[count], marker=markers[count])
+        if channel_names[0] in self.lims:
+            plt.xlim(self.lims[channel_names[0]])
+        if channel_names[1] in self.lims:
+            plt.ylim(self.lims[channel_names[1]])
         if legend is not None:
             plt.legend(legend, loc='center left', bbox_to_anchor=(1,0.5))
         if title is not None:
             plt.title(title, y=1.08)
-        plt.xlabel(channels[0])
-        plt.ylabel(channels[1])
+        plt.xlabel(channel_names[0])
+        plt.ylabel(channel_names[1])
         plt.show()
     
