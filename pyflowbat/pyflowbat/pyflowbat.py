@@ -74,6 +74,26 @@ class StatisticsExtraction:
         return True
 
 class Workspace:
+    """
+    A class describing PyFlowBAT workspaces. Workspaces
+    contain all the methods for operating on batches
+    of PyFlowBAT data and contain all samples and
+    statistics.
+    
+    :param stylesheet: the stylesheet for plotting
+        PyFlowBAT analyzed data,
+        defaults to the PyFlowBAT standard stylesheet
+    :type stylesheet: dict
+    :param lims_file: the path to the CSV file defining
+        upper and lower limits for standard PyFlowBAT
+        gating functions
+    :type lims_file: str
+    :param full_output: whether or not to display all
+        output of PyFlowBAT operations; it is HIGHLY
+        recommended to leave this at the default True,
+        defaults to True
+    :type full_output: bool
+    """
 
     ###################################
     # CONSTRUCTOR AND WORKSPACE SETUP #
@@ -85,6 +105,9 @@ class Workspace:
             lims_file: str = "_std",
             full_output: bool = False
         ) -> None:
+        """
+        Constructor method.
+        """
         self.full_output = full_output
         if lims_file == "_std":
             self.lims = _std_vals.std_lims
