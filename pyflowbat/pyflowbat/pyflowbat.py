@@ -910,15 +910,56 @@ class Workspace:
 
     def graph_statistics(
             self,
-            data: list[list[Union[str, list[str]]]],
+            data: list[list[Union[str, tuple[str, str]]]],
             errors: tuple[bool, bool] = (False, False),
-            legend: Optional[str] = None,
+            legend: Optional[list[str]] = None,
             title: Optional[str] = None,
             labels: tuple[Optional[str], Optional[str]] = (None, None),
             xlog: bool = False,
             ylog: bool = False,
             save: Union[bool, str] = True
         ) -> None:
+        """
+        Plots statistics from a collection.
+        
+        :param data: the data to plot;
+            follows the pattern of a list of the following:
+            [STATISTIC_COLLECTION_NAME, X_STATISTIC_NAME, Y_STATISTIC_NAME, SPECIFICATION_TUPLEs...];
+            where each SPECIFICATION_TUPLE is follows the pattern of:
+            (STATISTIC, VALUE);
+            and only rows were STATISTIC=VALUE are included in this x,y plot;
+            an arbitrary number of SPECIFICATION_TUPLEs can be included;
+            an arbitrary number of these lists can be included to define different scatter
+            plots in one figure
+        :type data: list[list[Union[str, tuple[str, str]]]]
+        :param errors: if x and y axis errors should be included; only
+            one tuple can be provided for the entire figue,
+            defaults to (False, False)
+        :type errors: tuple[bool, bool]
+        :param legend: the legend for the plot,
+            defaults to None
+        :type legend: Optional[list[str]]
+        :param title: the title for the plot,
+            defaults to None
+        :type title: Optional[str]
+        :param labels: the x and y labels for the plot,
+            defaults to (None, None)
+        :type labels: tuple[Optional[str], Optional[str]]
+        :param xlog: if the x axis should be in logarithmic scale,
+            defaults to False
+        :type xlog: bool
+        :param ylog: if the y axis should be in logarithmic scale,
+            defaults to False
+        :type ylog: bool
+        :param save: if the plot should be saved;
+            can be a boolean or a string;
+            if a string, saves to the specified file;
+            if a boolean, saves to a file with the
+            name of the plot title if True;
+            does not save figure if set to False,
+            defaults to True
+        :type save: Union[bool, str]
+        """
         graphable_data = []
         for _, val in enumerate(data):
             if len(val) <= 3:
