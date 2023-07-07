@@ -34,3 +34,8 @@ To install tkinter, run the following&mdash;or equivalent for your Linux distro&
 ```text
 sudo apt get install python3-tkinter
 ```
+
+## Usage
+
+Full PyFlowBAT documentation is available [here](https://elliberes.me/pyflowbat-docs).
+Demonstrations of using PyFlowBAT are available in [this repository](https://github.com/ellifteria/pyflowbat-examples).
