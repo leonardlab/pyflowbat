@@ -6,6 +6,10 @@ PyFlowBAT is an open-source Python package for performing high-throughput batch 
 
 ---
 
+## Full documentation is available [here](https://elliberes.me/pyflowbat-docs)
+
+---
+
 ## Example usage
 
 For an example of use, view the example notebooks [here](https://github.com/ellifteria/pyflowbat-examples).
