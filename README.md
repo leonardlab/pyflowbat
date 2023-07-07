@@ -18,7 +18,7 @@ pandas == 2.0.0
 To install PyFlowBAT and all required dependencies, run
 
 ```text
-pip install -e pyflowbat
+pip install pyflowbat
 ```
 
 from the parent directory—the one containing only this `README.md` file and a folder named `pyflowbat`.
