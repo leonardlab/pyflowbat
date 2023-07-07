@@ -53,6 +53,7 @@ std_lims = {
     'FSC-H': [0, 150000]
 }
 
+# standard bead conversions from Spherotech RCP-30-5 Rainbow Calibration Beads
 std_beads_conversions = {'MEFLs': np.array([2.96174193e+02, 4.16526369e+03, 1.38208041e+04, 4.15681797e+04,
        1.32189078e+05, 4.01564084e+05, 1.09439899e+06, 3.37475176e+06,
        8.42886081e+06]), 'MEPEs': np.array([2.55346084e+02, 6.18159397e+03, 2.08165858e+04, 6.08673939e+04,

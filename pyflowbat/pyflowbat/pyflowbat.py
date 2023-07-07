@@ -153,8 +153,8 @@ class Workspace:
         """
         Initialized R functionality for R language gating functions.
         NOTE: this method and R gating functionality both require
-          the R programming language to be installed for features to
-          work properly.
+        the R programming language to be installed for features to
+        work properly.
         
         :param check_R_installation: whether or not to check if the R
             language is installed
@@ -228,10 +228,31 @@ class Workspace:
     def calculate_beads_factors(
             self,
             beads_file_file_path: str, 
-            beads_fluorescent_channels: list[str],
+            beads_fluorescent_channels: list[tuple[str, str]],
             beads_num_pops: int,
             beads_conversions_file: str = "_std"
         ) -> None:
+        """
+        Calculates the conversion factors for this workspace
+        from a specified beads file.
+        
+        :param beads_file_file_path: the path to the beads file
+            to calculate conversion factors from
+        :type beads_file_file_path: str
+        :param beads_fluorescent_channels: a list of tuples containing
+            the names of the fluorescent channels and the corresponding
+            MEFs;
+            follows the pattern of:
+            [(\"channel 1\", \"MEF 1\"), (\"channel 2\", \"MEF 2\")]
+        :type beads_fluorescent_channels: list[tuple[str, str]]
+        :param beads_num_pops: the number of beads populations in the
+            beads file to calculate conversion factors from
+        :type beads_num_pops: int
+        :param beads_conversions_file: the path to the file
+            specifying the manufacturers bead conversion values,
+            defaults to the PyFlowBAT standard beads values aka
+            Spherotech RCP-30-5 Rainbow Calibration Beads
+        :type beads_conversions_file: str"""
         self.conversion_factors = self._perform_beads_calculations(
             beads_file_file_path, beads_fluorescent_channels,
             beads_num_pops, beads_conversions_file)
