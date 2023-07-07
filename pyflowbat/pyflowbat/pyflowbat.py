@@ -89,8 +89,10 @@ class Workspace:
         gating functions
     :type lims_file: str
     :param full_output: whether or not to display all
-        output of PyFlowBAT operations; it is HIGHLY
-        recommended to leave this at the default True,
+        output of PyFlowBAT operations;
+        it is HIGHLY recommended to leave this at the
+        default value:
+        True,
         defaults to True
     :type full_output: bool
     """
@@ -148,6 +150,20 @@ class Workspace:
             self,
             check_R_installation: bool = True
         ) -> None:
+        """
+        Initialized R functionality for R language gating functions.
+        NOTE: this method and R gating functionality both require
+          the R programming language to be installed for features to
+          work properly.
+        
+        :param check_R_installation: whether or not to check if the R
+            language is installed
+            it is HIGHLY recommended to leave this at the
+            default value:
+            True,
+            defaults to True
+        :type check_R_installation: bool
+        """
         if self.r_ready:
             print("R functionality already initialized")
             return
