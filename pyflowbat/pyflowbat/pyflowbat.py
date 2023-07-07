@@ -429,7 +429,7 @@ class Workspace:
             self,
             statistics_collection_name: str,
             new_statistics_collection_name: str,
-            statistic_name: str,
+            statistic_name: Union[str, list[str]],
             new_statistic_name: str,
             operation: Callable,
             **kwargs
@@ -443,8 +443,10 @@ class Workspace:
         :param new_statistics_collection_name: the name of the new statistics collection
             to create for the post-operation statistics
         :type new_statistics_collection_name: str
-        :param statistic_name: the name of the statistic to operate on
-        :type statistic_name: str
+        :param statistic_name: the name of the statistic to operate on;
+            can be a single statistic or multiple; only statistics specified
+            here will be used in the operation
+        :type statistic_name: Union[str, list[str]]
         :param new_statistic_name: the name of the statistic to be created from
             the operation
         :type new_statistic_name: str
