@@ -411,6 +411,24 @@ class Workspace:
             operation: Callable,
             **kwargs
         ) -> None:
+        """
+        Applies a specified operation to a statistic in a statistics collection.
+        
+        :param statistics_collection_name: the name of the statistics collection to
+            operate on
+        :type statistics_collection_name: str
+        :param new_statistics_collection_name: the name of the new statistics collection
+            to create for the post-operation statistics
+        :type new_statistics_collection_name: str
+        :param statistic_name: the name of the statistic to operate on
+        :type statistic_name: str
+        :param new_statistic_name: the name of the statistic to be created from
+            the operation
+        :type new_statistic_name: str
+        :param operation: the function defining the opperation to apply
+        :type operation: function/Callable
+        :param \*\*kwargs: keywords to pass to the operation
+        """
         # note: function can be vectorized
         data = self.stats_collections[statistics_collection_name]
         if new_statistics_collection_name not in self.stats_collections.keys() or self.stats_collections[
