@@ -702,22 +702,53 @@ class Workspace:
     def calculate_compensation_matrix(
             self,
             sample_collection_name: str,
-            compensation_samples: str,
-            compensation_channels: list[str],
+            compensation_samples_name: str,
+            compensation_channel_names: list[str],
             threshold: int = 10**-4,
-            k: float = 0.1
+            compensation_rate: float = 0.1
         ) -> None:
+        """
+        Calculates a compensation matrix by repeatedly flattening to zero
+        the best fit line through the specified compensation sample data.
+        Flattening stops once the best fit line has a slope under the provided
+        threshold.
+        NOTE: at present, only 2- and 3- sample compensation matrices can
+        be calculated.
+        NOTE: at present, flattening continues for all compensation samples
+        as long as any compensation sample has a best fit slope greater than
+        the threshold.
+        NOTE: this method must always be run before the workspace's
+        `apply_compensation_matrix` method.
+        
+        :param sample_collection_name: the name of the collection from
+            which to find the samples for compensation matrix calculation
+        :type sample_collection_name: str
+        :param compensation_sample_names: the names of the samples used
+            for compensation
+        :type compensation_sample_names: list[str]
+        :param compensation_channel_names: the channel names to be
+            compensated
+        :type compensation_channel_names: list[str]
+        :param threshold: the threshold to flatten the best fit
+            lines to,
+            defaults to 10**4
+        :type threshold: float
+        :param compensation_rate: the rate at which to calculate the
+            compensation matrix,
+            defaults to 0.1
+        :type compensation_rate: float
+        """
         samples_to_compensate = []
-        for sample in compensation_samples:
+        for sample in compensation_samples_name:
             samples_to_compensate.append(self.sample_collections[sample_collection_name][sample])
-        if len(compensation_channels) == 2:
-            self.compensation_matrix = (compensation_channels, self._calculate_compensation_matrix_2_channels(
-                samples_to_compensate[0], samples_to_compensate[1], compensation_channels[0], compensation_channels[1], threshold, k))
-        elif len(compensation_channels) == 3:
+        if len(compensation_channel_names) == 2:
+            self.compensation_matrix = (compensation_channel_names, self._calculate_compensation_matrix_2_channels(
+                samples_to_compensate[0], samples_to_compensate[1], compensation_channel_names[0], compensation_channel_names[1], threshold, compensation_rate))
+        elif len(compensation_channel_names) == 3:
             self.compensation_matrix = self._calculate_compensation_matrix_n_channels(
                 samples_to_compensate[0], samples_to_compensate[1], samples_to_compensate[2],
-                compensation_channels[0], compensation_channels[1], compensation_channels[2],
-                threshold, k)
+                compensation_channel_names[0], compensation_channel_names[1], compensation_channel_names[2],
+                threshold, compensation_rate)
         else:
             raise NotImplementedError("Compensation not implemented for more than 3 colors") 
         #     self.compensation_matrix = (compensation_channels, self._calculate_compensation_matrix_n_channels(samples_to_compensate, compensation_channels, threshold, k))
@@ -761,6 +792,18 @@ class Workspace:
             sample_collection_name: str,
             new_sample_collection_name: str
         ) -> None:
+        """
+        Applies the workspace compensation matrix to one sample collection creating another.
+        NOTE: the workspace's `calculate_compensation_matrix` method must be run before this
+        method may be run.
+        
+        :param sample_collection_name: the name of the sample collection to compensate
+        :type sample_collection_name: str
+        :param new_sample_collection_name: the name of the new sample collection to create
+            for the compensated samples
+        :type new_sample_collection_name: str"""
+        if self.compensation_matrix is None:
+            raise ValueError("The workspace compensation matrix is not defined, please run calculate a matrix first")
         compensation_channels = self.compensation_matrix[0]
         compensation_matrix = self.compensation_matrix[1]
         if len(compensation_channels) == 2:
