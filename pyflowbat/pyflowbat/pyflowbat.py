@@ -268,7 +268,24 @@ class Workspace:
             include: list[str],
             not_include: list[str]
         ) -> None:
-
+        """
+        Loads samples from a folder into a sample collection in the workspace.
+        
+        :param sample_collection_name: the name of the sample collection
+            into which to load samples
+        :type sample_collection_name: str
+        :param samples_folder_path: the path to the folder with the samples
+            to load
+        :type samples_folder_path: str
+        :param include: the list of keywords in the names of files
+            that must be present to load, all keywords must be
+            present in a file's name to load as a sample
+        :type include: list[str]
+        :param not_include: the list of keywords in the names of files
+            that must not be present to load, all keywords must not be
+            present in a file's name to load as a sample
+        :type not_include: list[str]
+        """
         def samples_quals(name):
             for word in include:
                 if word not in name:
