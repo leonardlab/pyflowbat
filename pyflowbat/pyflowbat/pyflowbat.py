@@ -14,15 +14,6 @@ from . import _std_vals
 SampleCollection = dict[str, fc.io.FCSData]
 StatisticCollection = pd.DataFrame
 
-comments_to_add = """
-        Description
-
-        :param param1: this is a first param
-        :param param2: this is a second param
-        :returns: this is a description of what is returned
-        :raises keyError: raises an exception
-        """
-
 class StatisticsExtraction:
     """
     A class containing a rule for extracting statistics from a
@@ -386,6 +377,25 @@ class Workspace:
             combination_operations: Union[str, Callable],
             sem_cols: list[str]
         ) -> None:
+        """
+        Combines replicates in a statistics collection.
+        
+        :param statistics_collection_name: the name of the statistics collection
+            from which to combine replicates
+        :type statistics_collection_name: str
+        :param combined_statistics_collection_name: the name of the new statistics
+            collection storing the combined statistics
+        :type combined_statistics_collection_name: str
+        :param combine_by: the statistics by which to combine replicates;
+            each set of statistics is combined if all statistics here are
+            equivalent
+        :type combine_by: list[str]
+        :param combination_operation: the function defining the operation
+            by which to combine rows;
+            may be a Pandas GroupBy function
+        :type operation: Union[function/Callable, str]
+        :param \*\*kwargs: keywords to pass to the combination operation
+        """
         df = self.stats_collections[statistics_collection_name].copy()
         columns_to_drop_combine = [i for i in list(df.columns)
                            if (i not in list(combination_operations.keys())
