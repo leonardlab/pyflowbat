@@ -767,7 +767,7 @@ class Workspace:
     def calculate_compensation_matrix(
             self,
             sample_collection_name: str,
-            compensation_samples_name: str,
+            compensation_sample_names: str,
             compensation_channel_names: list[str],
             threshold: int = 10**-4,
             compensation_rate: float = 0.1
@@ -804,7 +804,7 @@ class Workspace:
         :type compensation_rate: float
         """
         samples_to_compensate = []
-        for sample in compensation_samples_name:
+        for sample in compensation_sample_names:
             samples_to_compensate.append(self.sample_collections[sample_collection_name][sample])
         if len(compensation_channel_names) == 2:
             self.compensation_matrix = (compensation_channel_names, self._calculate_compensation_matrix_2_channels(
