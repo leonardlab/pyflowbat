@@ -234,7 +234,7 @@ class Workspace:
             the names of the fluorescent channels and the corresponding
             MEFs;
             follows the pattern of:
-            [(\"channel 1\", \"MEF 1\"), (\"channel 2\", \"MEF 2\")]
+            [(CHANNEL, MEF), (CHANNEL, MEF),...]
         :type beads_fluorescent_channels: list[tuple[str, str]]
         :param beads_num_pops: the number of beads populations in the
             beads file to calculate conversion factors from
