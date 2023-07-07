@@ -24,16 +24,40 @@ comments_to_add = """
         """
 
 class StatisticsExtraction:
+    """
+    A class containing a rule for extracting statistics from a
+    sample collection.
+
+    :param sample_collection_name: the name of the sample collection
+        in the workspace from which to extract the statistics
+    :type sample_collection_name: str
+    :param statistics_collection_name: the name of the statistics
+        collection to create/extract statistics into
+    :type statistics_collection_name: str
+    :param include: the list of keywords in the names of samples
+        that must be present to extract statistics from that
+        sample, all keywords must be present in a sample's name
+        for statistics to be extracted from it
+    :type include: list[str]
+    :param not_include: the list of keywords in the names of
+        samples that must not be present to extract statistics
+        from that sample, all keywords must not be present in a
+        sample's name for statistics to be extracted from it
+    :type not_include: list[str]
+    """
 
     def __init__(
             self,
-            sample_collection: dict[str, SampleCollection],
-            statistics_collection: dict[str, StatisticCollection],
+            sample_collection_name: str,
+            statistics_collection_name: str,
             include: list[str],
             not_include: list[str]
             ) -> None:
-        self.sample_collection = sample_collection
-        self.statistics_collection = statistics_collection
+        """
+        Constructor method.
+        """
+        self.sample_collection_name = sample_collection_name
+        self.statistics_collection_name = statistics_collection_name
         self.include = include
         self.not_include = not_include
 
@@ -250,7 +274,7 @@ class Workspace:
             operation: Callable,
             **kwargs
         ) -> None:
-        data = self.sample_collections[extraction.sample_collection].copy()
+        data = self.sample_collections[extraction.sample_collection_name].copy()
         data_names = list(data.keys())
         data_list = []
         for i in range(len(data_names)):
@@ -258,7 +282,7 @@ class Workspace:
             if extraction._follows_rule(file_name):
                 fcs_data = data[file_name]
                 data_list.append(operation(name = file_name, data = fcs_data, **kwargs))
-        self.stats_collections[extraction.statistics_collection][statistc_name] = data_list
+        self.stats_collections[extraction.statistics_collection_name][statistc_name] = data_list
 
     ##########################
     # STATISTIC MANIPULATION #
