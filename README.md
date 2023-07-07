@@ -15,7 +15,7 @@ scipy == 1.10.1
 pandas == 2.0.0
 ```
 
-To install PyFlowBAT and all required dependencies, run
+To install PyFlowBAT and all required dependencies, navigate to the `pyflowbat` directory containing `setup.py` and run
 
 ```text
 pip install -e pyflowbat
