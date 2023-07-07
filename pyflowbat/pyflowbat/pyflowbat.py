@@ -374,7 +374,7 @@ class Workspace:
             statistics_collection_name: str,
             combined_statistics_collection_name: str,
             combine_by: list[str],
-            combination_operations: Union[str, Callable],
+            combination_operations: dict[str, Union[str, Callable]],
             sem_cols: list[str]
         ) -> None:
         """
@@ -390,10 +390,15 @@ class Workspace:
             each set of statistics is combined if all statistics here are
             equivalent
         :type combine_by: list[str]
-        :param combination_operation: the function defining the operation
-            by which to combine rows;
-            may be a Pandas GroupBy function
-        :type operation: Union[function/Callable, str]
+        :param combination_operations: the functions defining the operation
+            by which to combine rows for each column;
+            may be a Pandas GroupBy function or a function;
+            follows the pattern:
+            {STATISTIC: OPERATION, STATISTIC: OPERATION...}
+        :type combination_operations: dict[str, Union[function/Callable, str]]
+        :param sem_cols: list of statistics for which the standard error of the mean
+            of the combination should be calculated
+        :type sem_cols: list[str]
         :param \*\*kwargs: keywords to pass to the combination operation
         """
         df = self.stats_collections[statistics_collection_name].copy()
