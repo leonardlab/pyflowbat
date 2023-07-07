@@ -1,7 +1,7 @@
 import numpy as np
 import statsmodels.api as sm
 from scipy.signal import find_peaks, peak_prominences
-from .pyflowbat import Workspace
+from .pyflowbat import Workspace, SampleCollection
 from typing import Optional, Union
 
 #####################
@@ -10,31 +10,72 @@ from typing import Optional, Union
 
 def find_percentile(
         workspace: Workspace,
-        sample_collection: str,
+        sample_collection_name: str,
         sample_name: str,
-        channel: list[str],
+        channel_name: str,
         percentile: float,
         **kwargs
     ) -> float:
-    flow_sample = workspace.sample_collections[sample_collection][sample_name]
-    return np.percentile(flow_sample[:, channel], percentile)
+    """
+    Finds the specified percentile of the data in a given channel
+    a PyFlowBAT sample.
+
+    :param workspace: the PyFlowBAT Workspace containing the sample
+        whose percentile is desired.
+    :type workspace: pyflowbat.pyflowbat.Workspace
+    :param sample_collection_name: the name of the sample collection
+        containing the sample whose percentile is desired
+    :type sample_collection_name: str
+    :param sample_name: the name of the sample whose percentile
+        is desired
+    :type sample_name: str
+    :param channel_name: the name of the channel whose percentile
+        is desired
+    :type channel_name: str
+    :param percentile: the desired percentile
+    :type percentile: float
+    :returns: the desired percentile of the data in the specified channel
+        of the PyFlowBAT sample
+    :rtype: float
+    """
+    flow_sample = workspace.sample_collections[sample_collection_name][sample_name]
+    return np.percentile(flow_sample[:, channel_name], percentile)
 
 def gate_high_low(
-        data_to_gate: dict[str, np.ndarray],
-        channel: str,
+        data_to_gate: SampleCollection,
+        gating_channel_name: str,
         high: Optional[float] = None,
         low: Optional[float] = None,
         **kwargs
-    ) -> dict[str, np.ndarray]:
+    ) -> SampleCollection:
+    """
+    Gates all samples in a collection within an upper and lower
+    bound in a specified channel.
+
+    :param data_to_gate: the PyFlowBAT sample collection to gate;
+        NOTE: this parameter is provided to by the
+        `pyflowbat.pyflowbat.Workspace.apply_gate` method and should
+        NOT be specified by the user
+    :type data_to_gate: pyflowbat.pyflowbat.SampleCollection
+    :param gating_channel_name: the name of the channel to gate
+        the samples
+    :type gating_channel_name: str
+    :param high: the upper bound
+    :type high: Optional[float]
+    :param low: the lower bound
+    :type low: Optional[float]
+    :returns: the gated PyFlowBAT sample collection
+    :rtype: pyflowbat.pyflowbat.SampleCollection
+    """
     data_copy = data_to_gate.copy()
     for key in data_copy.keys():
         flow_sample = data_to_gate[key]
         if high is None:
-            high = np.max(flow_sample[:, channel])
+            high = np.max(flow_sample[:, gating_channel_name])
         if low is None:
-            low = np.min(flow_sample[:, channel])
-        flow_sample = flow_sample[flow_sample[:, channel] > low]
-        flow_sample = flow_sample[flow_sample[:, channel] < high]
+            low = np.min(flow_sample[:, gating_channel_name])
+        flow_sample = flow_sample[flow_sample[:, gating_channel_name] > low]
+        flow_sample = flow_sample[flow_sample[:, gating_channel_name] < high]
     return data_copy
 
 ##################
@@ -42,11 +83,29 @@ def gate_high_low(
 ##################
 
 def gate_singlets(
-        data_to_gate: dict[str, np.ndarray],
+        data_to_gate: SampleCollection,
         a: float = 10**10,
         b: float= 2*10**4,
         **kwargs
-    ) -> dict[str, np.ndarray]:
+    ) -> SampleCollection:
+    """
+    Gates all samples in a collection for singlets by drawing a tilted
+    ellipse.
+
+    :param data_to_gate: the PyFlowBAT sample collection to gat
+        NOTE: this parameter is provided to by the
+        `pyflowbat.pyflowbat.Workspace.apply_gate` method and should
+        NOT be specified by the user
+    :type data_to_gate: pyflowbat.pyflowbat.SampleCollection
+    :param a: the long axis of the ellipse surrounding the singlets,
+        defaults to 1*10**10
+    :type a: float
+    :param b: the short axis of the ellipse surrounding the singlets,
+        defaults to 2*10**4
+    :type b: float
+    :returns: the gated PyFlowBAT sample collection
+    :rtype: pyflowbat.pyflowbat.SampleCollection
+    """
     data_copy = data_to_gate.copy()
     for key in data_copy.keys():
         flow_sample = data_copy[key]
@@ -99,18 +158,46 @@ def _gate_heks_helper(data_to_gate, manual_cutoffs, limits):
     return gated_data
 
 def gate_heks(
-        data_to_gate: dict[str, np.ndarray],
-        method: str,
-        samples: list[str],
+        data_to_gate: SampleCollection,
         limits: dict[str, list[float]],
+        method: str = "same",
+        samples: Optional[list[str]] = None,
         **kwargs
-    ) -> dict[str, np.ndarray]:
+    ) -> SampleCollection:
+    """
+    Gates all samples in a collection for HEK 293FT by finding the
+    most extreme valleys in the FSC-A and SSC-A channels.
+
+    :param data_to_gate: the PyFlowBAT sample collection to gate;
+        NOTE: this parameter is provided to by the
+        `pyflowbat.pyflowbat.Workspace.apply_gate` method and should
+        NOT be specified by the user
+    :type data_to_gate: pyflowbat.pyflowbat.SampleCollection
+    :param limits: the limits of the FSC-A and SSC-A channels;
+        NOTE: this parameter is provided to by the
+        `pyflowbat.pyflowbat.Workspace.apply_gate` method and should
+        NOT be specified by the user, to specify this parameter's
+        value, change the value of `limits` within the Workspace in
+        which this gate is being applied
+    :type limits: dict[str, list[float]]
+    :param method: whether or not to use a unique gate for each
+        sample in the collection or the same gate for all samples,
+        options are \"unique\" or \"same\",
+        defaults to \"same\"
+    :type method: str
+    :param samples: the samples to use to define the gate if the
+        \"same\" method is used,
+        defaults to None
+    :type samples: Optional[list[str]]
+    :returns: the gated PyFlowBAT sample collection
+    :rtype: pyflowbat.pyflowbat.SampleCollection
+    """
     limits = [limits["FSC-A"][1], limits["SSC-A"][1]]
     data_copy = data_to_gate.copy()
     if method == 'unique':
         for key in data_to_gate.keys():
             data_copy[key] = _gate_heks_helper(data_copy[key], None, limits)
-    else:
+    elif method == 'same':
         avg_FSC = []
         avg_SSC = []
         for i in samples:
@@ -121,4 +208,6 @@ def gate_heks(
         avg_SSC = np.mean(avg_SSC)
         for key in data_to_gate.keys():
             data_copy[key] = _gate_heks_helper(data_copy[key], {'FSC-A': avg_FSC, 'SSC-A': avg_SSC}, limits)
+    else:
+        raise ValueError("method must be either \"unique\" or \"same\"")
     return data_copy

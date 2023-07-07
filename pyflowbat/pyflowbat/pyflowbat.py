@@ -11,11 +11,11 @@ from typing import Union, Optional, Callable
 from . import _std_vals
 
 
-SamplesCollection = dict[str, dict[str, fc.io.FCSData]]
-StatisticsCollection = dict[str, pd.DataFrame]
+SampleCollection = dict[str, fc.io.FCSData]
+StatisticCollection = pd.DataFrame
 
 comments_to_add = """
-        Extracts 
+        Description
 
         :param param1: this is a first param
         :param param2: this is a second param
@@ -23,12 +23,12 @@ comments_to_add = """
         :raises keyError: raises an exception
         """
 
-class _StatisticsExtraction:
+class StatisticsExtraction:
 
     def __init__(
             self,
-            sample_collection: SamplesCollection,
-            statistics_collection: StatisticsCollection,
+            sample_collection: dict[str, SampleCollection],
+            statistics_collection: dict[str, StatisticCollection],
             include: list[str],
             not_include: list[str]
             ) -> None:
@@ -37,7 +37,7 @@ class _StatisticsExtraction:
         self.include = include
         self.not_include = not_include
 
-    def follows_rule(
+    def _follows_rule(
             self,
             name: str
         ):
@@ -108,8 +108,6 @@ class Workspace:
             self._verify_R_installation()
         else:
             warnings.warn("Using R gating functions without verifying R is installed is not recommended", RuntimeWarning)
-        from . import r_gating
-        from . import r_gating_general
         self.r_ready = True
 
     ######################
@@ -218,18 +216,24 @@ class Workspace:
             include: list[str],
             not_include: list[str],
             statistic_names: list[str]
-    ) -> _StatisticsExtraction:
+    ) -> StatisticsExtraction:
         """
         Creates a rule needed for extracting statistics from a sample collection
 
-        :param sample_collection: the name of the sample collection from which to extract
-        :param statistics_collection: the name of the statistics collection to create and extract statistics to
+        :param sample_collection_name: the name of the sample collection from which to extract
+        :type sample_collection_name: str
+        :param statistics_collection_name: the name of the statistics collection to create and extract statistics to
+        :type statistics_collection_name: str
         :param include: a list of words that must be included in the samples from which to extract statistics
+        :type include: list[str]
         :param not_include: a list of words that must NOT be included in the samples from which to extract statistics
+        :type not_include: list[str]
         :param statistic_names: a list of the stastics that will be extracted using this rule
+        :type statistic_names: list[str]
         :returns: the extraction rule to be used in `extract_samples`
+        :rtype: pyflowbat.pyflowbat.StatisticsExtraction
         """
-        extraction = _StatisticsExtraction(
+        extraction = StatisticsExtraction(
             sample_collection_name,
             statistics_collection_name,
             include,
@@ -241,7 +245,7 @@ class Workspace:
 
     def extract_statistic(
             self,
-            extraction: _StatisticsExtraction,
+            extraction: StatisticsExtraction,
             statistc_name: str,
             operation: Callable,
             **kwargs
@@ -251,7 +255,7 @@ class Workspace:
         data_list = []
         for i in range(len(data_names)):
             file_name = str(data_names[i])
-            if extraction.follows_rule(file_name):
+            if extraction._follows_rule(file_name):
                 fcs_data = data[file_name]
                 data_list.append(operation(name = file_name, data = fcs_data, **kwargs))
         self.stats_collections[extraction.statistics_collection][statistc_name] = data_list

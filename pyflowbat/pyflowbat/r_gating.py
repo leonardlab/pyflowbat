@@ -1,9 +1,8 @@
 import rpy2.robjects as ro
 import rpy2.robjects.numpy2ri
 import numpy as np
+from .pyflowbat import SampleCollection
 rpy2.robjects.numpy2ri.activate()
-
-from . import r_gating_general
 
 r = ro.r
 
@@ -57,12 +56,32 @@ transitional_gate <- function(data, nr, nc, channel_names,
 ''')
 
 def singlet_gate(
-        data_to_gate: dict[str, np.ndarray],
-        gating_channels: list[str],
-        r_ready: bool = False,
+        data_to_gate: SampleCollection,
+        gating_channel_names: list[str],
+        _r_ready: bool = False,
         **kwargs
-    ) -> dict[str, np.ndarray]:
-    if not r_ready:
+    ) -> SampleCollection:
+    """
+    PyFlowBAT wrapper for the `singletGate` function from the R `OpenCyto` library.
+    For more, please see the OpenCyto documentation.
+
+    :param data_to_gate: the PyFlowBAT sample collection to gate;
+        NOTE: this parameter is provided by the
+        `pyflowbat.pyflowbat.Workspace.apply_gate` method and should
+        NOT be specified by the user
+    :type data_to_gate: pyflowbat.pyflowbat.SampleCollection
+    :param gating_channel_names: the 2 channels to use for gating
+    :type gating_channel_names: list[str]
+    :param _r_ready: a boolean describing whether or not R functionality
+        has been initialized forthis Workspace;
+        NOTE: this parameter is provided by the
+        `pyflowbat.pyflowbat.Workspace.apply_gate` method and should
+        NOT be specified by the user
+    :type _r_ready: bool
+    :returns: the gated PyFlowBAT sample collection
+    :rtype: pyflowbat.pyflowbat.SampleCollection
+    """
+    if not _r_ready:
         raise RuntimeError("R functionality has not been initialized")
     
     data_copy = data_to_gate.copy()
@@ -74,7 +93,10 @@ def singlet_gate(
 
         num_rows,num_cols = fcs_data_nparr.shape
 
-        r_result = r_func(data = fcs_data_nparr.T.tolist(), nr = num_rows, nc = num_cols, channel_names = list(fcs_data.channels), gating_channels = gating_channels)
+        r_result = r_func(
+            data = fcs_data_nparr.T.tolist(), nr = num_rows,
+            nc = num_cols, channel_names = list(fcs_data.channels),
+            gating_channels = gating_channel_names)
 
         num_rows, num_cols = r_result.shape
         fcs_data = fcs_data[0:num_rows, :]
@@ -82,15 +104,43 @@ def singlet_gate(
     return data_copy
 
 def clust_2d_gate(
-        data_to_gate:dict[str, np.ndarray],
-        gating_channels: list[str],
-        target: list[float, float],
+        data_to_gate:SampleCollection,
+        gating_channel_names: list[str],
+        target: list[float],
         quantile: float = 0.95,
-        K: bool = 2,
-        r_ready: bool = False,
+        K: int = 2,
+        _r_ready: bool = False,
         **kwargs
-    ) -> dict[str, np.ndarray]:
-    if not r_ready:
+    ) -> SampleCollection:
+    """
+    PyFlowBAT wrapper for the `flowClust.2d` function from the R `OpenCyto` library.
+    For more, please see the OpenCyto documentation.
+
+    :param data_to_gate: the PyFlowBAT sample collection to gate;
+        NOTE: this parameter is provided by the
+        `pyflowbat.pyflowbat.Workspace.apply_gate` method and should
+        NOT be specified by the user
+    :type data_to_gate: pyflowbat.pyflowbat.SampleCollection
+    :param gating_channel_names: the 2 channels to use for gating
+    :type gating_channel_names: list[str]
+    :param target: the 2 dimenstional target around which to cluster
+    :type target: list[float]
+    :param quantile: the quantile provided to `flowClust.2d` for gating,
+        defaults to 0.95
+    :type quantile: float
+    :param K: the K provided to `flowClust.2d` for gating,
+        defaults to 2
+    :type K: int
+    :param _r_ready: a boolean describing whether or not R functionality
+        has been initialized forthis Workspace;
+        NOTE: this parameter is provided by the
+        `pyflowbat.pyflowbat.Workspace.apply_gate` method and should
+        NOT be specified by the user
+    :type _r_ready: bool
+    :returns: the gated PyFlowBAT sample collection
+    :rtype: pyflowbat.pyflowbat.SampleCollection
+    """
+    if not _r_ready:
         raise RuntimeError("R functionality has not been initialized")
 
     data_copy = data_to_gate.copy()
@@ -102,7 +152,11 @@ def clust_2d_gate(
 
         num_rows,num_cols = fcs_data_nparr.shape
 
-        r_result = r_func(data = fcs_data_nparr.T.tolist(), nr = num_rows, nc = num_cols, channel_names = list(fcs_data.channels), gating_channels = gating_channels, target = target, K = K, quantile = quantile)
+        r_result = r_func(
+            data = fcs_data_nparr.T.tolist(), nr = num_rows,
+            nc = num_cols, channel_names = list(fcs_data.channels),
+            gating_channels = gating_channel_names, target = target,
+            K = K, quantile = quantile)
 
         num_rows, num_cols = r_result.shape
         fcs_data = fcs_data[0:num_rows, :]
@@ -110,16 +164,47 @@ def clust_2d_gate(
     return data_copy
 
 def transitional_gate(
-        data_to_gate: dict[str, np.ndarray],
-        gating_channels: list[str],
+        data_to_gate: SampleCollection,
+        gating_channel_names: list[str],
         target: list[float],
         quantile: float = 0.95,
         K: int = 2,
-        translation: float = 0.15,
-        r_ready: bool = False,
+        translation: int = 0.15,
+        _r_ready: bool = False,
         **kwargs
-    ) -> dict[str, np.ndarray]:
-    if not r_ready:
+    ) -> SampleCollection:
+    """
+    PyFlowBAT wrapper for the `flowClust.2d` translational gate function from the R `OpenCyto` library.
+    For more, please see the OpenCyto documentation.
+
+    :param data_to_gate: the PyFlowBAT sample collection to gate;
+        NOTE: this parameter is provided by the
+        `pyflowbat.pyflowbat.Workspace.apply_gate` method and should
+        NOT be specified by the user
+    :type data_to_gate: pyflowbat.pyflowbat.SampleCollection
+    :param gating_channel_names: the 2 channel names to use for gating
+    :type gating_channel_names: list[str]
+    :param target: the 2 dimenstional target around which to cluster
+    :type target: list[float]
+    :param quantile: the quantile provided to `flowClust.2d` for gating,
+        defaults to 0.95
+    :type quantile: float
+    :param K: the K provided to `flowClust.2d` for gating,
+        defaults to 2
+    :type K: int
+    :param translation: the translation provided to `flowClust.2d` for gating,
+        defaults to 0.15
+    :type translation: float
+    :param _r_ready: a boolean describing whether or not R functionality
+        has been initialized forthis Workspace;
+        NOTE: this parameter is provided by the
+        `pyflowbat.pyflowbat.Workspace.apply_gate` method and should
+        NOT be specified by the user
+    :type _r_ready: bool
+    :returns: the gated PyFlowBAT sample collection
+    :rtype: pyflowbat.pyflowbat.SampleCollection
+    """
+    if not _r_ready:
         raise RuntimeError("R functionality has not been initialized")
 
     data_copy = data_to_gate.copy()
@@ -134,7 +219,7 @@ def transitional_gate(
         r_result = r_func(
             data = fcs_data_nparr.T.tolist(), nr = num_rows,
             nc = num_cols, channel_names = list(fcs_data.channels),
-            gating_channels = gating_channels, target = target,
+            gating_channels = gating_channel_names, target = target,
             K = K, quantile = quantile, translation = translation)
 
         num_rows, num_cols = r_result.shape
@@ -145,9 +230,9 @@ def transitional_gate(
 def __test__():
     import FlowCal as fc
     ungated_data = {'test_fcs': fc.io.FCSData("./PreDox_B_002.fcs")}
-    gated_data = singlet_gate(ungated_data, ["FSC-A", "FSC-H"], r_ready=True)
+    gated_data = singlet_gate(ungated_data, ["FSC-A", "FSC-H"], _r_ready=True)
     print(gated_data.shape)
-    gated_data = clust_2d_gate(ungated_data, ["FSC-A", "SSC-A"], target = [7.5*10**4, 5*10**4], r_ready=True)
+    gated_data = clust_2d_gate(ungated_data, ["FSC-A", "SSC-A"], target = [7.5*10**4, 5*10**4], _r_ready=True)
     print(gated_data.shape)
-    gated_data = transitional_gate(ungated_data, ["FSC-A", "SSC-A"], target = [7.5*10**4, 5*10**4], r_ready=True)
+    gated_data = transitional_gate(ungated_data, ["FSC-A", "SSC-A"], target = [7.5*10**4, 5*10**4], _r_ready=True)
     print(gated_data.shape)
