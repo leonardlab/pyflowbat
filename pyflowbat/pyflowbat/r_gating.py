@@ -101,6 +101,7 @@ def singlet_gate(
         num_rows, num_cols = r_result.shape
         fcs_data = fcs_data[0:num_rows, :]
         fcs_data[:, :] = r_result
+        data_copy[key] = fcs_data
     return data_copy
 
 def clust_2d_gate(
@@ -161,6 +162,7 @@ def clust_2d_gate(
         num_rows, num_cols = r_result.shape
         fcs_data = fcs_data[0:num_rows, :]
         fcs_data[:, :] = r_result
+        data_copy[key] = fcs_data
     return data_copy
 
 def transitional_gate(
@@ -225,6 +227,7 @@ def transitional_gate(
         num_rows, num_cols = r_result.shape
         fcs_data = fcs_data[0:num_rows, :]
         fcs_data[:, :] = r_result
+        data_copy[key] = fcs_data
     return data_copy
     
 def __test__():

@@ -58,4 +58,5 @@ def general_r_gate(
         nr, nc = r_result.shape
         fcs_data = fcs_data[0:nr, :]
         fcs_data[:, :] = r_result
+        data_copy[key] = fcs_data
     return data_copy

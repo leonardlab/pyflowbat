@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import statsmodels.api as sm
 import warnings
+import random
 from typing import Union, Optional, Callable
+import copy
 
 from . import _std_vals
 
@@ -355,7 +357,7 @@ class Workspace:
         :type operation: function/Callable
         :param \*\*kwargs: keywords to pass to the operation
         """ 
-        data = self.sample_collections[extraction.sample_collection_name].copy()
+        data = copy.deepcopy(self.sample_collections[extraction.sample_collection_name])
         data_names = list(data.keys())
         data_list = []
         for i in range(len(data_names)):
@@ -401,7 +403,7 @@ class Workspace:
         :type sem_cols: list[str]
         :param \*\*kwargs: keywords to pass to the combination operation
         """
-        df = self.stats_collections[statistics_collection_name].copy()
+        df = copy.deepcopy(self.stats_collections[statistics_collection_name])
         columns_to_drop_combine = [i for i in list(df.columns)
                            if (i not in list(combination_operations.keys())
                                and i not in combine_by)]
@@ -463,7 +465,7 @@ class Workspace:
         data = self.stats_collections[statistics_collection_name]
         if new_statistics_collection_name not in self.stats_collections.keys() or self.stats_collections[
             new_statistics_collection_name] is None:
-            self.stats_collections[new_statistics_collection_name] = data.copy()
+            self.stats_collections[new_statistics_collection_name] = copy.deepcopy(data)
         new_data = self.stats_collections[new_statistics_collection_name]
         if new_statistic_name is None:
             warnings.warn("No new statistic created", RuntimeWarning)
@@ -505,9 +507,9 @@ class Workspace:
         c_12 = c_13 = c_21 = c_23 = c_31 = c_32 = 0.0
         A = np.array([[1.0, c_12, c_13], [c_21, 1.0, c_23], [c_31, c_32, 1.0]])
 
-        copy_fcs_ch_1 = fcs_ch_1.copy()
-        copy_fcs_ch_2 = fcs_ch_2.copy()
-        copy_fcs_ch_3 = fcs_ch_3.copy()
+        copy_fcs_ch_1 = copy.deepcopy(fcs_ch_1)
+        copy_fcs_ch_2 = copy.deepcopy(fcs_ch_2)
+        copy_fcs_ch_3 = copy.deepcopy(fcs_ch_3)
 
         e_21 = (sm.OLS(copy_fcs_ch_1[:, ch_2], copy_fcs_ch_1[:, ch_1]).fit()).params[0]
         e_31 = (sm.OLS(copy_fcs_ch_1[:, ch_3], copy_fcs_ch_1[:, ch_1]).fit()).params[0]
@@ -693,8 +695,8 @@ class Workspace:
         c_12 = c_21 = 0.0
         A = np.array([[1.0, c_12], [c_21, 1.0]])
 
-        copy_fcs_ch_1 = fcs_ch_1.copy()
-        copy_fcs_ch_2 = fcs_ch_2.copy()
+        copy_fcs_ch_1 = copy.deepcopy(fcs_ch_1)
+        copy_fcs_ch_2 = copy.deepcopy(fcs_ch_2)
 
         e_21 = (sm.OLS(copy_fcs_ch_1[:, ch_2], copy_fcs_ch_1[:, ch_1]).fit()).params[0]
         e_12 = (sm.OLS(copy_fcs_ch_2[:, ch_1], copy_fcs_ch_2[:, ch_2]).fit()).params[0]
@@ -819,7 +821,7 @@ class Workspace:
         #     self.compensation_matrix = (compensation_channels, self._calculate_compensation_matrix_n_channels(samples_to_compensate, compensation_channels, threshold, k))
 
     def _apply_compensation_matrix_2_channels(self, data_to_compensate, ch_1, ch_2, A):
-        data_copy = data_to_compensate.copy()
+        data_copy = copy.deepcopy(data_to_compensate)
         for key in data_to_compensate.keys():
             curr_data = data_to_compensate[key]
 
@@ -835,7 +837,7 @@ class Workspace:
         return data_copy
 
     def _apply_compensation_matrix_3_channels(self, data_to_compensate, ch_1, ch_2, ch_3, A):
-        data_copy = data_to_compensate.copy()
+        data_copy = copy.deepcopy(data_to_compensate)
         for key in data_to_compensate.keys():
             curr_data = data_to_compensate[key]
             curr_data[:, ch_1] = np.dot(A[0, :], np.asarray([curr_data[:, ch_1].T, curr_data[:, ch_2].T, curr_data[:, ch_3].T]))
@@ -893,6 +895,8 @@ class Workspace:
             sample_collection_name: str,
             new_sample_collection_name: str,
             gating_function: Callable,
+            output_plots: int = 5,
+            gating_channel_names: list[str] = ["FSC-A", "SSC-A"],
             **kwargs
         ) -> None:
         """
@@ -905,11 +909,42 @@ class Workspace:
         :type new_sample_collection_name: str
         :param gating_function: the function defining the gate to apply
         :type gating_function: function/Callable
+        :param output_plots: the number of plots to visualize if full output is true,
+            defaults to 5
+        :type output_plots: int
+        :param gating_channel_names: the channels to visualize,
+            if gating_channel_names is defined, uses the first two
+            elements
+            if gating_channel_name is defined, uses that value twice,
+            if none are defined, 
+        :type gating_channel_names: list[str]
+        :param output_override_value: if provided, workspace will use this value
+            instead of its `full_output` variable
+        :type output_override_value: bool
         :param \*\*kwargs: keywords to pass to the gating function
         """
-        data_copy = (self.sample_collections[sample_collection_name]).copy()
+        data_copy = copy.deepcopy(self.sample_collections[sample_collection_name])
         self.sample_collections[new_sample_collection_name] = gating_function(
-            data_copy.copy(), r_ready = self.r_ready, limits = self.lims, **kwargs)
+            copy.deepcopy(data_copy), r_ready = self.r_ready, limits = self.lims, **kwargs)
+        try:
+            output = output_override_value
+        except:
+            output = self.full_output
+        if output:
+            samples_to_plot = random.sample(list(self.sample_collections[sample_collection_name]), output_plots)
+            try:
+                gating_channel_names = [gating_channel_name] * 2
+            except:
+                pass
+            channels_to_plot = gating_channel_names * 2
+            for sample_to_plot in samples_to_plot:
+                print(sample_to_plot)
+                self.visualize_plot_change(
+                    sample_collection_name_0=sample_collection_name,
+                    sample_collection_name_f=new_sample_collection_name,
+                    sample_name=sample_to_plot,
+                    channel_names=(channels_to_plot[0], channels_to_plot[1])
+                )
 
     #################
     # VISUALIZATION #
@@ -1025,7 +1060,7 @@ class Workspace:
             [[sample_collection_name_0, sample_name], [sample_collection_name_f, sample_name]],
             ["#FF0000", "#1E90FF"],
             channel_names,
-            [0.04, 0.06],
+            [0.3, 0.6],
             ['.', 'o'],
             [sample_collection_name_0, sample_collection_name_f],
             f"Change in sample {sample_name}:\n{sample_collection_name_0} to {sample_collection_name_f}")

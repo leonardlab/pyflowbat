@@ -69,13 +69,14 @@ def gate_high_low(
     """
     data_copy = data_to_gate.copy()
     for key in data_copy.keys():
-        flow_sample = data_to_gate[key]
+        flow_sample = data_copy[key]
         if high is None:
             high = np.max(flow_sample[:, gating_channel_name])
         if low is None:
             low = np.min(flow_sample[:, gating_channel_name])
         flow_sample = flow_sample[flow_sample[:, gating_channel_name] > low]
         flow_sample = flow_sample[flow_sample[:, gating_channel_name] < high]
+        data_copy[key] = flow_sample
     return data_copy
 
 ##################
@@ -119,6 +120,7 @@ def gate_singlets(
         data_rotated = np.dot(data_centered, R.T)
         mask = ((data_rotated[:,0]/a)**2 + (data_rotated[:,1]/b)**2 <= 1)
         flow_sample = flow_sample[mask]
+        data_copy[key] = flow_sample
     return data_copy
 
 ##############

@@ -2,7 +2,7 @@ from matplotlib import cycler
 import numpy as np
 
 std_pfb_style = {
-    'font.family': ['Nunito', 'Lato', 'Arial'],
+    # 'font.family': ['Nunito', 'Lato', 'Arial'],
 
     'lines.linewidth': 4,
     'lines.solid_capstyle': 'butt',
