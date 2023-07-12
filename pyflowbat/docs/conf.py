@@ -29,5 +29,11 @@ autodoc_mock_imports = ["rpy2"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'renku'
+html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
+html_logo="https://raw.githubusercontent.com/ellifteria/pyflowbat/main/pyflowbat/resources/pyflowbat-logo.png"
+html_theme_options = {
+    "logo": {
+        "alt_text": "PyFlowBAT",
+    }
+}
