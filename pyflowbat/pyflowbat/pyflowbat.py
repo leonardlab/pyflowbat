@@ -340,7 +340,7 @@ class Workspace:
     def extract_statistic(
             self,
             extraction: StatisticsExtraction,
-            statistc_name: str,
+            statistic_name: str,
             operation: Callable,
             **kwargs
         ) -> None:
@@ -350,8 +350,8 @@ class Workspace:
         :param extraction: the StatisticExtraction rule to use for the
             extraction
         :type extraction: pyflowbat.pyflowbat.StatisticsExtraction
-        :param statistc_name: the name of the statistic being created
-        :type statistc_name: str
+        :param statistic_name: the name of the statistic being created
+        :type statistic_name: str
         :param operation: the function defining the operation defining
             the extraction
         :type operation: function/Callable
@@ -365,7 +365,7 @@ class Workspace:
             if extraction._follows_rule(file_name):
                 fcs_data = data[file_name]
                 data_list.append(operation(name = file_name, data = fcs_data, **kwargs))
-        self.stats_collections[extraction.statistics_collection_name][statistc_name] = data_list
+        self.stats_collections[extraction.statistics_collection_name][statistic_name] = data_list
 
     ##########################
     # STATISTIC MANIPULATION #
