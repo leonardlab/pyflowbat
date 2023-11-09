@@ -21,7 +21,7 @@ To install PyFlowBAT and all required dependencies, run
 pip install pyflowbat
 ```
 
-from the parent directory—the one containing only this `README.md` file and a folder named `pyflowbat`.
+from this directory—the one containing only this `README.md` file and a folder named `pyflowbat`.
 
 This will install `pyflowbat` to your Python `site-packages` like a regular `pip` package.
 
