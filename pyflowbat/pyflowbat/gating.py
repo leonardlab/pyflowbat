@@ -128,6 +128,13 @@ def gate_singlets(
 ##############
 
 def _find_HEK_gate(data_to_gate):
+    """
+    Computes cutoffs for a HEK gate in a single sample of
+    HEK 293FT cells by finding the most extreme valleys
+    in the FSC-A and SSC-A channels.
+
+    Called by `gate_heks`.
+    """
     data_copy = data_to_gate.copy()
     H_fsc, edges_fsc = np.histogram(data_copy[:, 'FSC-A'], bins=1024)
     inv_H_fsc = np.max(H_fsc)-H_fsc
@@ -139,7 +146,13 @@ def _find_HEK_gate(data_to_gate):
     peaks_ssc, _ = find_peaks(inv_H_ssc, prominence = np.max(peak_prominences(inv_H_ssc, peaks_ssc)[0])-1)
     return edges_fsc[peaks_fsc[0]], edges_ssc[peaks_ssc[0]]
 
-def _gate_heks_helper(data_to_gate, manual_cutoffs, limits):
+def _gate_heks_one_sample(data_to_gate, manual_cutoffs, limits):
+    """
+    Gates a single sample of HEK 293FT cells by finding the
+    most extreme valleys in the FSC-A and SSC-A channels.
+
+    Called by `gate_heks` on each sample in a SampleCollection.
+    """
     max_FSC = limits[0]
     max_SSC = limits[1]
     if manual_cutoffs is not None:
@@ -198,7 +211,7 @@ def gate_heks(
     data_copy = data_to_gate.copy()
     if method == 'unique':
         for key in data_to_gate.keys():
-            data_copy[key] = _gate_heks_helper(data_copy[key], None, limits)
+            data_copy[key] = _gate_heks_one_sample(data_copy[key], None, limits)
     elif method == 'same':
         avg_FSC = []
         avg_SSC = []
@@ -209,7 +222,7 @@ def gate_heks(
         avg_FSC = np.mean(avg_FSC)
         avg_SSC = np.mean(avg_SSC)
         for key in data_to_gate.keys():
-            data_copy[key] = _gate_heks_helper(data_copy[key], {'FSC-A': avg_FSC, 'SSC-A': avg_SSC}, limits)
+            data_copy[key] = _gate_heks_one_sample(data_copy[key], {'FSC-A': avg_FSC, 'SSC-A': avg_SSC}, limits)
     else:
         raise ValueError("method must be either \"unique\" or \"same\"")
     return data_copy
