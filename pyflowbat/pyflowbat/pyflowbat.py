@@ -897,6 +897,7 @@ class Workspace:
             gating_function: Callable,
             output_plots: int = 5,
             gating_channel_names: list[str] = ["FSC-A", "SSC-A"],
+            output_override: Optional[bool] = None,
             **kwargs
         ) -> None:
         """
@@ -913,29 +914,29 @@ class Workspace:
             defaults to 5
         :type output_plots: int
         :param gating_channel_names: the channels to visualize,
-            if gating_channel_names is defined, uses the first two
+            if has more than one element, uses the first two
             elements
-            if gating_channel_name is defined, uses that value twice,
-            if none are defined, 
+            if has one element, uses that value twice,
+            defaults to `["FSC-A", "SSC-A"]` 
         :type gating_channel_names: list[str]
-        :param output_override_value: if provided, workspace will use this value
-            instead of its `full_output` variable
-        :type output_override_value: bool
+        :param output_override: if not `None`, workspace will use this
+            instead of its `full_output` variable,
+            defaults to None
+        :type output_override: Optional[bool]
         :param \*\*kwargs: keywords to pass to the gating function
         """
         data_copy = copy.deepcopy(self.sample_collections[sample_collection_name])
         self.sample_collections[new_sample_collection_name] = gating_function(
             copy.deepcopy(data_copy), r_ready = self.r_ready, limits = self.lims, **kwargs)
-        try:
-            output = output_override_value
-        except:
+        if output_override is not None:
+            output = output_override
+        else:
             output = self.full_output
         if output:
             samples_to_plot = random.sample(list(self.sample_collections[sample_collection_name]), output_plots)
-            try:
-                gating_channel_names = [gating_channel_name] * 2
-            except:
-                pass
+            if len(gating_channel_names) == 1:
+                gating_channel_names = [gating_channel_names[0]] * 2
+            gating_channel_names = [gating_channel_names[0], gating_channel_names[1]]
             channels_to_plot = gating_channel_names * 2
             for sample_to_plot in samples_to_plot:
                 print(sample_to_plot)
@@ -975,7 +976,7 @@ class Workspace:
             plots in one figure
         :type data: list[list[Union[str, tuple[str, str]]]]
         :param errors: if x and y axis errors should be included; only
-            one tuple can be provided for the entire figue,
+            one tuple can be provided for the entire figure,
             defaults to (False, False)
         :type errors: tuple[bool, bool]
         :param legend: the legend for the plot,

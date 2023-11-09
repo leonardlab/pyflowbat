@@ -73,7 +73,7 @@ def singlet_gate(
     :param gating_channel_names: the 2 channels to use for gating
     :type gating_channel_names: list[str]
     :param _r_ready: a boolean describing whether or not R functionality
-        has been initialized forthis Workspace;
+        has been initialized for this Workspace;
         NOTE: this parameter is provided by the
         `pyflowbat.pyflowbat.Workspace.apply_gate` method and should
         NOT be specified by the user
